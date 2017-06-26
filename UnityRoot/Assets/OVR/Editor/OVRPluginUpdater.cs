@@ -19,7 +19,7 @@ limitations under the License.
 
 ************************************************************************************/
 
-#if UNITY_EDITOR_WIN && UNITY_5_4_OR_NEWER
+#if UNITY_5_4_OR_NEWER
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -179,6 +179,8 @@ class OVRPluginUpdater
 		}
 
 		FileVersionInfo pluginVersionInfo = FileVersionInfo.GetVersionInfo(path);
+		if (pluginVersionInfo == null || pluginVersionInfo.ProductVersion == null || pluginVersionInfo.ProductVersion == "")
+			return new System.Version("0.0.0");
 		return new System.Version(pluginVersionInfo.ProductVersion);
 	}
 	
@@ -226,6 +228,10 @@ class OVRPluginUpdater
 				AssetDatabase.ImportAsset(relPath, ImportAssetOptions.ForceUpdate);
 
 				PluginImporter pi = PluginImporter.GetAtPath(relPath) as PluginImporter;
+				if (pi == null)
+				{
+					continue;
+				}
 
 				pi.SetCompatibleWithAnyPlatform(false);
 
@@ -296,14 +302,15 @@ class OVRPluginUpdater
 	}
 
 	private static bool restartPending = false;
+	private static readonly string autoUpdateEnabledKey = "Oculus_Utilities_OVRPluginUpdater_AutoUpdate_" + OVRManager.utilitiesVersion;
 	private static bool autoUpdateEnabled
 	{
 		get {
-			return EditorPrefs.GetBool("Oculus_Utilities_OVRPluginUpdater_AutoUpdate", true);
+			return EditorPrefs.GetBool(autoUpdateEnabledKey, true);
 		}
 
 		set {
-			EditorPrefs.SetBool("Oculus_Utilities_OVRPluginUpdater_AutoUpdate", value);
+			EditorPrefs.SetBool(autoUpdateEnabledKey, value);
 		}
 	}
 

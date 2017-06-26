@@ -1131,6 +1131,11 @@ public static class OVRInput
 		}
 	}
 
+	/// <summary>
+	/// Triggers a recenter to realign the specified controller's virtual pose with the user's real-world pose.
+	/// Only applicable to controllers that require recentering, such as the GearVR Controller.
+	/// Ignored for controllers that do not require recentering.
+	/// </summary>
 	public static void RecenterController(Controller controllerMask = Controller.Active)
 	{
 		if ((controllerMask & Controller.Active) != 0)

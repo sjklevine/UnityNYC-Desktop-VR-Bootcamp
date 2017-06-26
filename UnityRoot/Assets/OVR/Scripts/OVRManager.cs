@@ -534,6 +534,21 @@ public class OVRManager : MonoBehaviour
 	private static string prevAudioInId = string.Empty;
 	private static bool wasPositionTracked = false;
 
+	public static System.Version utilitiesVersion
+	{
+		get { return OVRPlugin.wrapperVersion; }
+	}
+
+	public static System.Version pluginVersion
+	{
+		get { return OVRPlugin.version; }
+	}
+
+	public static System.Version sdkVersion
+	{
+		get { return OVRPlugin.nativeSDKVersion; }
+	}
+
 #region Unity Messages
 
 	private void Awake()
