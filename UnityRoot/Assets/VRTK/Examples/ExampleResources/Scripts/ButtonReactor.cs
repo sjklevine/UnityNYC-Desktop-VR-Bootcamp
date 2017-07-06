@@ -22,10 +22,7 @@
 
         private void handlePush(object sender, Control3DEventArgs e)
         {
-            //VRTK_Logger.Info("Pushed");
-
-            GameObject newGo = (GameObject)Instantiate(go, dispenseLocation.position, Quaternion.identity);
-            //Destroy(newGo, 10f);
+			Instantiate(go, dispenseLocation.position, Quaternion.identity);
         }
     }
 }

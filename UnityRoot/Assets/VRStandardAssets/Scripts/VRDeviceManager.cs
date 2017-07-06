@@ -10,9 +10,7 @@ namespace VRStandardAssets.Utils
     {
         [SerializeField] private float m_RenderScale = 1.4f;
 
-
         private static VRDeviceManager s_Instance;
-
 
         public static VRDeviceManager Instance
         {
@@ -35,6 +33,7 @@ namespace VRStandardAssets.Utils
             {
                 s_Instance = this;
                 DontDestroyOnLoad (this);
+				VRSettings.renderScale = m_RenderScale;
             }
             else if (this != s_Instance)
             {
