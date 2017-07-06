@@ -147,7 +147,7 @@ GameObject:
   - component: {fileID: 4684416118261288}
   - component: {fileID: 111847062955643164}
   m_Layer: 0
-  m_Name: SecretFloor
+  m_Name: Floor
   m_TagString: Floor
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

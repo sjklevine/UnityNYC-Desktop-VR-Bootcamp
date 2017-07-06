@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class UnityNYC_SimplePushButton : MonoBehaviour {
+public class SimplePushButton : MonoBehaviour {
 	private Button myButton;
 
 	void OnEnable() {
@@ -17,6 +17,7 @@ public class UnityNYC_SimplePushButton : MonoBehaviour {
 		//Debug.Log ("TRIGGER ENTER - " + other.name);
 		// This is hacky as fuuu, but it works
 		if (other.name.Equals("Sphere") && myButton.IsInteractable()) {
+			Debug.Log ("SimpleButtonPush! " + this.name);
 			myButton.onClick.Invoke ();
 		}
 	}
