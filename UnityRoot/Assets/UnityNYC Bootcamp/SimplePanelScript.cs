@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 using VRTK;
 
 public class SimplePanelScript : MonoBehaviour {
 	public Material yellowMaterial;
 	public Material whiteMaterial;
+	public UnityEvent onActivate;
 
 	protected bool timedAutoDeactivate = false;
 	protected float activatedTime = 0.25f;
@@ -25,6 +27,7 @@ public class SimplePanelScript : MonoBehaviour {
 	{
 		this.GetComponent<Image> ().material = yellowMaterial;
 		if (timedAutoDeactivate) { timer = activatedTime; }
+		if (onActivate != null) { onActivate.Invoke (); }
 	}
 
 	public void Deactivate()

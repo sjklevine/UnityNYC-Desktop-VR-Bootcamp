@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - Bullet
+  - projectile
+  - FxTemporaire
+  - Floor
   layers:
   - Default
   - TransparentFX
@@ -21,7 +24,7 @@ TagManager:
   - Bg
   - FPSWeapon
   - StereoRender_Ignore
-  - 
+  - Kitten
   - 
   - 
   - 
