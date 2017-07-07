@@ -23,7 +23,7 @@ public class Surprise : MonoBehaviour {
 		GameObject.Destroy (currentFloor);
 
 		// Instantiate a secret from "Resources".
-		Instantiate(Resources.Load("Surprise/SecretFloor", typeof(GameObject)));
+		Instantiate(Resources.Load("Surprise/Floor", typeof(GameObject)));
 
 		// -------------------------
 

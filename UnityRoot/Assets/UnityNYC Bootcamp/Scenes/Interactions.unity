@@ -8907,7 +8907,6 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 1940447059}
-  - component: {fileID: 1940447061}
   - component: {fileID: 1940447060}
   m_Layer: 0
   m_Name: PlayArea
@@ -8965,28 +8964,6 @@ MonoBehaviour:
   teleporter: {fileID: 0}
   customBodyColliderContainer: {fileID: 0}
   customFootColliderContainer: {fileID: 0}
---- !u!114 &1940447061
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1940447058}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 377ced3493c4e1842a5b1c23f56519db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  blinkToColor: {r: 0, g: 0, b: 0, a: 1}
-  blinkTransitionSpeed: 0.6
-  distanceBlinkDelay: 0
-  headsetPositionCompensation: 1
-  targetListPolicy: {fileID: 0}
-  navMeshLimitDistance: 0
-  snapToNearestFloor: 1
-  customRaycast: {fileID: 0}
-  layersToIgnore:
-    serializedVersion: 2
-    m_Bits: 4
 --- !u!1 &1955163576
 GameObject:
   m_ObjectHideFlags: 0
@@ -9222,6 +9199,8 @@ GameObject:
   - component: {fileID: 2034683285}
   - component: {fileID: 2034683284}
   - component: {fileID: 2034683283}
+  - component: {fileID: 2034683286}
+  - component: {fileID: 2034683287}
   m_Layer: 0
   m_Name: Headset
   m_TagString: Untagged
@@ -9326,6 +9305,31 @@ MonoBehaviour:
   controller: {fileID: 0}
   interactUse: {fileID: 0}
   customOrigin: {fileID: 0}
+--- !u!114 &2034683286
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2034683281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44596d094d0946345a7fc6688ba9c06c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &2034683287
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2034683281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55f5162da85c58142a21d37af1bed70b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fadeSpeed: 1
+  unfadeSpeed: 1
+  fadeColor: {r: 0.9034481, g: 0, b: 1, a: 1}
 --- !u!1 &2050023889
 GameObject:
   m_ObjectHideFlags: 0
