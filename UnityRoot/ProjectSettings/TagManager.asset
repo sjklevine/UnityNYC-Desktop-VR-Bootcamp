@@ -9,7 +9,6 @@ TagManager:
   - FxTemporaire
   - Floor
   - ExcludeTeleport
-  - RemoteBeam
   layers:
   - Default
   - TransparentFX
@@ -27,7 +26,7 @@ TagManager:
   - FPSWeapon
   - StereoRender_Ignore
   - Kitten
-  - 
+  - DestinationPoints
   - 
   - 
   - 
