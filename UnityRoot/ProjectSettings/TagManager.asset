@@ -8,6 +8,8 @@ TagManager:
   - projectile
   - FxTemporaire
   - Floor
+  - ExcludeTeleport
+  - RemoteBeam
   layers:
   - Default
   - TransparentFX
