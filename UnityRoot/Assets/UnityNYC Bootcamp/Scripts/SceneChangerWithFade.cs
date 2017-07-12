@@ -8,6 +8,7 @@ public class SceneChangerWithFade : MonoBehaviour
 	public float fadeSpeed = 0.1f;
 	public float unfadeSpeed = 0.1f;
 	public Color fadeColor = Color.black;
+    public bool allowKeyboard = false;
 
 	private VRTK_HeadsetFade fadeReference;
 
@@ -36,38 +37,49 @@ public class SceneChangerWithFade : MonoBehaviour
 
     private void Update()
     {
+        if (allowKeyboard) { 
+            int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
+            int nextSceneIndex = currentSceneIndex;
 
-        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-        int nextSceneIndex = currentSceneIndex;
+            if (Input.GetKeyUp(KeyCode.Space))
+            {
+                nextSceneIndex++;
+			    if (nextSceneIndex >= SceneManager.sceneCountInBuildSettings) {
+				    nextSceneIndex = 0;
+			    }
+            }
+            else if (Input.GetKeyUp(KeyCode.Backspace))
+            {
+                nextSceneIndex--;
+			    if (nextSceneIndex < 0) {
+				    nextSceneIndex = SceneManager.sceneCountInBuildSettings - 1;
+			    }
+            }
 
-        if (Input.GetKeyUp(KeyCode.Space))
-        {
-            nextSceneIndex++;
-			if (nextSceneIndex >= SceneManager.sceneCountInBuildSettings) {
-				nextSceneIndex = 0;
-			}
+            if (nextSceneIndex == currentSceneIndex)
+            {
+                return;
+            }
+
+            // If we're here, we're doing this.
+            StartFadeLoad(nextSceneIndex);
         }
-        else if (Input.GetKeyUp(KeyCode.Backspace))
-        {
-            nextSceneIndex--;
-			if (nextSceneIndex < 0) {
-				nextSceneIndex = SceneManager.sceneCountInBuildSettings - 1;
-			}
-        }
+    }
 
-        if (nextSceneIndex == currentSceneIndex)
-        {
-            return;
-        }
+    public void StartFadeLoadNextScene()
+    {
+        StartFadeLoad(SceneManager.sceneCountInBuildSettings + 1);
+    }
 
-		// If we're here, we're doing this.
-		// Inline event callback, baby:
-		fadeReference.HeadsetFadeComplete += (object sender, HeadsetFadeEventArgs e) => {
-			SceneManager.LoadScene(nextSceneIndex);
-		};
+    private void StartFadeLoad(int nextSceneIndex)
+    {
+        // Inline event callback, baby:
+        fadeReference.HeadsetFadeComplete += (object sender, HeadsetFadeEventArgs e) => {
+            SceneManager.LoadScene(nextSceneIndex);
+        };
 
-		// Start the fade!
-		fadeReference.Fade(fadeColor, fadeSpeed);
-	}
+        // Start the fade!
+        fadeReference.Fade(fadeColor, fadeSpeed);
 
+    }
 }

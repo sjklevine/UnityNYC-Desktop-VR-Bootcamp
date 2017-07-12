@@ -4515,9 +4515,9 @@ MonoBehaviour:
   autoManageVRSettings: 1
   autoLoadSetup: 1
   setups:
-  - {fileID: 1432121731}
   - {fileID: 1432121729}
   - {fileID: 1432121727}
+  - {fileID: 1432121731}
 --- !u!4 &703774208
 Transform:
   m_ObjectHideFlags: 0
@@ -7580,6 +7580,7 @@ MonoBehaviour:
   fadeSpeed: 1
   unfadeSpeed: 1
   fadeColor: {r: 0.9034481, g: 0, b: 1, a: 1}
+  allowKeyboard: 1
 --- !u!114 &1207154969
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7950,6 +7951,14 @@ Prefab:
     - target: {fileID: 4000011368645488, guid: 41c0760bd81dd084283814f0c432b466, type: 2}
       propertyPath: m_RootOrder
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000012256370280, guid: 41c0760bd81dd084283814f0c432b466, type: 2}
+      propertyPath: m_RootOrder
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000013858448892, guid: 41c0760bd81dd084283814f0c432b466, type: 2}
+      propertyPath: m_RootOrder
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 41c0760bd81dd084283814f0c432b466, type: 2}

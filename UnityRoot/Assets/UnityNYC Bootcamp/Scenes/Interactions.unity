@@ -9330,6 +9330,7 @@ MonoBehaviour:
   fadeSpeed: 1
   unfadeSpeed: 1
   fadeColor: {r: 0.9034481, g: 0, b: 1, a: 1}
+  allowKeyboard: 1
 --- !u!1 &2050023889
 GameObject:
   m_ObjectHideFlags: 0
