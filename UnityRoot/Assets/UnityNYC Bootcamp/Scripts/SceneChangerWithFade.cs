@@ -66,10 +66,14 @@ public class SceneChangerWithFade : MonoBehaviour
         }
     }
 
-    public void StartFadeLoadNextScene()
-    {
-        StartFadeLoad(SceneManager.sceneCountInBuildSettings + 1);
-    }
+	public void StartFadeLoadPreviousScene()
+	{
+		StartFadeLoad(SceneManager.GetActiveScene().buildIndex - 1);
+	}
+	public void StartFadeLoadNextScene()
+	{
+		StartFadeLoad(SceneManager.GetActiveScene().buildIndex + 1);
+	}
 
     private void StartFadeLoad(int nextSceneIndex)
     {

@@ -17,5 +17,4 @@ public class ShootPanelScript : SimplePanelScript {
 			this.Activate ();
 		}
 	}
-
 }
