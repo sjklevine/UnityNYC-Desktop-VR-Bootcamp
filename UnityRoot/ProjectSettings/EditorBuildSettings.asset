@@ -7,13 +7,13 @@ EditorBuildSettings:
   m_Scenes:
   - enabled: 1
     path: Assets/UnityNYC Bootcamp/Scenes/Title.unity
-    guid: 21ba8959b0b9c5e41889da424bb00b0b
+    guid: 45e0fd8c2189d7246bbedfbe728f6dfb
   - enabled: 1
     path: Assets/UnityNYC Bootcamp/Scenes/Interactions.unity
-    guid: 41067cccdc22645478ee6cb98521573c
+    guid: 098e711cf6688e54da1d7520bf184d35
   - enabled: 1
     path: Assets/UnityNYC Bootcamp/Scenes/Movement.unity
-    guid: 4f50a7a8b06addb4bb0a3d8703760ce9
+    guid: 7500db700b9193442b6497b541afdf3a
   - enabled: 1
     path: Assets/UnityNYC Bootcamp/Scenes/Shooting.unity
-    guid: 6fd4d104d50789d459436f53d54371c6
+    guid: 3be950bada3f8dd4d93a9fa94abdee13
