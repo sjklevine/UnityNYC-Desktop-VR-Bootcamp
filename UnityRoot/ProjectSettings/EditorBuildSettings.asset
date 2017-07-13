@@ -17,3 +17,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/UnityNYC Bootcamp/Scenes/Shooting.unity
     guid: 3be950bada3f8dd4d93a9fa94abdee13
+  - enabled: 1
+    path: Assets/UnityNYC Bootcamp/Scenes/Completed/Completed Title.unity
+    guid: 84a44d9aed7aa1d4891ec24884e0436a
+  - enabled: 1
+    path: Assets/UnityNYC Bootcamp/Scenes/Completed/Completed Interactions.unity
+    guid: ddc2ce77bee50ef4287dcb20da07e129
+  - enabled: 1
+    path: Assets/UnityNYC Bootcamp/Scenes/Completed/Completed Movement.unity
+    guid: be4d5b27e97aef64c98bf108b84396b3
+  - enabled: 1
+    path: Assets/UnityNYC Bootcamp/Scenes/Completed/Completed Shooting.unity
+    guid: 00000000000000000000000000000000
