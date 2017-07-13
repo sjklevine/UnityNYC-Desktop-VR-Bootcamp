@@ -5,9 +5,9 @@ using VRTK;
 
 public class SceneChangerWithFade : MonoBehaviour
 {
-	public float fadeSpeed = 0.1f;
-	public float unfadeSpeed = 0.1f;
-	public Color fadeColor = Color.black;
+	public float fadeSpeed = 1.0f;
+	public float unfadeSpeed = 1.0f;
+	public Color fadeColor = Color.white;
     public bool allowKeyboard = false;
 
 	private VRTK_HeadsetFade fadeReference;
@@ -27,6 +27,7 @@ public class SceneChangerWithFade : MonoBehaviour
 		StartCoroutine(WaitFrameThenUnfade());
 
 	}
+
 	private IEnumerator WaitFrameThenUnfade() {
 		yield return 0;
 
@@ -84,6 +85,5 @@ public class SceneChangerWithFade : MonoBehaviour
 
         // Start the fade!
         fadeReference.Fade(fadeColor, fadeSpeed);
-
     }
 }

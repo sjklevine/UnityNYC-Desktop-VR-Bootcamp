@@ -6,8 +6,8 @@ using UnityEngine.Events;
 using VRTK;
 
 public class SimplePanelScript : MonoBehaviour {
-	public Material yellowMaterial;
-	public Material whiteMaterial;
+	public Material defaultMaterial;
+	public Material activateMaterial;
 	public UnityEvent onActivate;
 
 	protected bool timedAutoDeactivate = false;
@@ -25,13 +25,13 @@ public class SimplePanelScript : MonoBehaviour {
 
 	public void Activate()
 	{
-		this.GetComponent<Image> ().material = yellowMaterial;
+		this.GetComponent<Image> ().material = activateMaterial;
 		if (timedAutoDeactivate) { timer = activatedTime; }
 		if (onActivate != null) { onActivate.Invoke (); }
 	}
 
 	public void Deactivate()
 	{
-		this.GetComponent<Image>().material = whiteMaterial;
+		this.GetComponent<Image>().material = defaultMaterial;
 	}
 }
