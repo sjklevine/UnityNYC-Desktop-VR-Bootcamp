@@ -1280,7 +1280,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fcd1caca6cf9d743b6662961fa83541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  remoteBeam: {fileID: 515507800}
+  remoteBeamScript: {fileID: 515507801}
 --- !u!114 &161610580
 MonoBehaviour:
   m_ObjectHideFlags: 0
