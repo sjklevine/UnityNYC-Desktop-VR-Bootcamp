@@ -252,14 +252,50 @@ PlayerSettings:
   - m_BuildTarget: Standalone
     m_Enabled: 1
     m_Devices:
-    - Oculus
+    - None
     - OpenVR
-  - m_BuildTarget: Android
-    m_Enabled: 1
-    m_Devices:
     - Oculus
+  - m_BuildTarget: Android
+    m_Enabled: 0
+    m_Devices: []
   - m_BuildTarget: 
-    m_Enabled: 1
+    m_Enabled: 0
+    m_Devices: []
+  - m_BuildTarget: iOS
+    m_Enabled: 0
+    m_Devices: []
+  - m_BuildTarget: WebGL
+    m_Enabled: 0
+    m_Devices: []
+  - m_BuildTarget: Tizen
+    m_Enabled: 0
+    m_Devices: []
+  - m_BuildTarget: PSP2
+    m_Enabled: 0
+    m_Devices: []
+  - m_BuildTarget: PS4
+    m_Enabled: 0
+    m_Devices: []
+  - m_BuildTarget: PSM
+    m_Enabled: 0
+    m_Devices: []
+  - m_BuildTarget: XboxOne
+    m_Enabled: 0
+    m_Devices: []
+  - m_BuildTarget: SamsungTV
+    m_Enabled: 0
+    m_Devices: []
+  - m_BuildTarget: N3DS
+    m_Enabled: 0
+    m_Devices: []
+  - m_BuildTarget: WiiU
+    m_Enabled: 0
+    m_Devices: []
+  - m_BuildTarget: tvOS
+    m_Enabled: 0
+    m_Devices: []
+  - m_BuildTarget: Facebook
+    m_Enabled: 0
     m_Devices: []
   openGLRequireES31: 0
   openGLRequireES31AEP: 0
@@ -295,6 +331,7 @@ PlayerSettings:
   switchSocketMemoryPoolSize: 6144
   switchSocketAllocatorPoolSize: 128
   switchSocketConcurrencyLimit: 14
+  switchScreenResolutionBehavior: 2
   switchUseCPUProfiler: 0
   switchApplicationID: 0x0005000C10000001
   switchNSODependencies: 
@@ -310,9 +347,6 @@ PlayerSettings:
   switchTitleNames_9: 
   switchTitleNames_10: 
   switchTitleNames_11: 
-  switchTitleNames_12: 
-  switchTitleNames_13: 
-  switchTitleNames_14: 
   switchPublisherNames_0: 
   switchPublisherNames_1: 
   switchPublisherNames_2: 
@@ -325,9 +359,6 @@ PlayerSettings:
   switchPublisherNames_9: 
   switchPublisherNames_10: 
   switchPublisherNames_11: 
-  switchPublisherNames_12: 
-  switchPublisherNames_13: 
-  switchPublisherNames_14: 
   switchIcons_0: {fileID: 0}
   switchIcons_1: {fileID: 0}
   switchIcons_2: {fileID: 0}
@@ -340,9 +371,6 @@ PlayerSettings:
   switchIcons_9: {fileID: 0}
   switchIcons_10: {fileID: 0}
   switchIcons_11: {fileID: 0}
-  switchIcons_12: {fileID: 0}
-  switchIcons_13: {fileID: 0}
-  switchIcons_14: {fileID: 0}
   switchSmallIcons_0: {fileID: 0}
   switchSmallIcons_1: {fileID: 0}
   switchSmallIcons_2: {fileID: 0}
@@ -355,9 +383,6 @@ PlayerSettings:
   switchSmallIcons_9: {fileID: 0}
   switchSmallIcons_10: {fileID: 0}
   switchSmallIcons_11: {fileID: 0}
-  switchSmallIcons_12: {fileID: 0}
-  switchSmallIcons_13: {fileID: 0}
-  switchSmallIcons_14: {fileID: 0}
   switchManualHTML: 
   switchAccessibleURLs: 
   switchLegalInformation: 
@@ -373,7 +398,7 @@ PlayerSettings:
   switchApplicationErrorCodeCategory: 
   switchUserAccountSaveDataSize: 0
   switchUserAccountSaveDataJournalSize: 0
-  switchAttribute: 0
+  switchApplicationAttribute: 0
   switchCardSpecSize: 4
   switchCardSpecClock: 25
   switchRatingsMask: 0
@@ -400,6 +425,15 @@ PlayerSettings:
   switchParentalControl: 0
   switchAllowsScreenshot: 1
   switchDataLossConfirmation: 0
+  switchSupportedNpadStyles: 3
+  switchSocketConfigEnabled: 0
+  switchTcpInitialSendBufferSize: 32
+  switchTcpInitialReceiveBufferSize: 64
+  switchTcpAutoSendBufferSizeMax: 256
+  switchTcpAutoReceiveBufferSizeMax: 256
+  switchUdpSendBufferSize: 9
+  switchUdpReceiveBufferSize: 42
+  switchSocketBufferEfficiency: 4
   ps4NPAgeRating: 12
   ps4NPTitleSecret: 
   ps4NPTrophyPackPath: 
@@ -530,15 +564,25 @@ PlayerSettings:
   webGLUseWasm: 0
   webGLCompressionFormat: 1
   scriptingDefineSymbols:
-    1: CROSS_PLATFORM_INPUT
+    1: CROSS_PLATFORM_INPUT;VRTK_DEFINE_OCULUS_UTILITIES_1_12_0_OR_NEWER;VRTK_DEFINE_SDK_OCULUS;VRTK_DEFINE_SDK_OCULUS_AVATAR;VRTK_DEFINE_SDK_STEAMVR;VRTK_DEFINE_STEAMVR_PLUGIN_1_2_1_OR_NEWER;VRTK_VERSION_3_2_0;VRTK_VERSION_3_2_0_OR_NEWER;VRTK_VERSION_3_1_0_OR_NEWER
     2: CROSS_PLATFORM_INPUT
-    4: CROSS_PLATFORM_INPUT;MOBILE_INPUT
-    7: CROSS_PLATFORM_INPUT;MOBILE_INPUT
+    4: CROSS_PLATFORM_INPUT;MOBILE_INPUT;VRTK_VERSION_3_2_0;VRTK_VERSION_3_2_0_OR_NEWER;VRTK_VERSION_3_1_0_OR_NEWER
+    7: CROSS_PLATFORM_INPUT;MOBILE_INPUT;VRTK_VERSION_3_2_0;VRTK_VERSION_3_2_0_OR_NEWER;VRTK_VERSION_3_1_0_OR_NEWER
+    13: VRTK_VERSION_3_2_0;VRTK_VERSION_3_2_0_OR_NEWER;VRTK_VERSION_3_1_0_OR_NEWER
     14: MOBILE_INPUT
     15: CROSS_PLATFORM_INPUT;MOBILE_INPUT
     16: CROSS_PLATFORM_INPUT;MOBILE_INPUT
-    17: MOBILE_INPUT
-    20: MOBILE_INPUT
+    17: MOBILE_INPUT;VRTK_VERSION_3_2_0;VRTK_VERSION_3_2_0_OR_NEWER;VRTK_VERSION_3_1_0_OR_NEWER
+    18: VRTK_VERSION_3_2_0;VRTK_VERSION_3_2_0_OR_NEWER;VRTK_VERSION_3_1_0_OR_NEWER
+    19: VRTK_VERSION_3_2_0;VRTK_VERSION_3_2_0_OR_NEWER;VRTK_VERSION_3_1_0_OR_NEWER
+    20: MOBILE_INPUT;VRTK_VERSION_3_2_0;VRTK_VERSION_3_2_0_OR_NEWER;VRTK_VERSION_3_1_0_OR_NEWER
+    21: VRTK_VERSION_3_2_0;VRTK_VERSION_3_2_0_OR_NEWER;VRTK_VERSION_3_1_0_OR_NEWER
+    22: VRTK_VERSION_3_2_0;VRTK_VERSION_3_2_0_OR_NEWER;VRTK_VERSION_3_1_0_OR_NEWER
+    23: VRTK_VERSION_3_2_0;VRTK_VERSION_3_2_0_OR_NEWER;VRTK_VERSION_3_1_0_OR_NEWER
+    24: VRTK_VERSION_3_2_0;VRTK_VERSION_3_2_0_OR_NEWER;VRTK_VERSION_3_1_0_OR_NEWER
+    25: VRTK_VERSION_3_2_0;VRTK_VERSION_3_2_0_OR_NEWER;VRTK_VERSION_3_1_0_OR_NEWER
+    26: VRTK_VERSION_3_2_0;VRTK_VERSION_3_2_0_OR_NEWER;VRTK_VERSION_3_1_0_OR_NEWER
+    27: VRTK_VERSION_3_2_0;VRTK_VERSION_3_2_0_OR_NEWER;VRTK_VERSION_3_1_0_OR_NEWER
   platformArchitecture:
     iOS: 2
   scriptingBackend:
