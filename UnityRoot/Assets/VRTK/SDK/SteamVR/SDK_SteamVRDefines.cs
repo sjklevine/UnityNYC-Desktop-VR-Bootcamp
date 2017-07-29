@@ -17,6 +17,19 @@ namespace VRTK
         private const string BuildTargetGroupName = "Standalone";
 
         [SDK_ScriptingDefineSymbolPredicate(ScriptingDefineSymbol, BuildTargetGroupName)]
+        [SDK_ScriptingDefineSymbolPredicate(SDK_ScriptingDefineSymbolPredicateAttribute.RemovableSymbolPrefix + "STEAMVR_PLUGIN_1_2_2_OR_NEWER", BuildTargetGroupName)]
+        private static bool IsPluginVersion122OrNewer()
+        {
+            Type controllerManagerClass = VRTK_SharedMethods.GetTypeUnknownAssembly("SteamVR_ControllerManager");
+            if (controllerManagerClass == null)
+            {
+                return false;
+            }
+
+            return controllerManagerClass.GetMethod("SetUniqueObject", BindingFlags.NonPublic | BindingFlags.Instance) != null;
+        }
+
+        [SDK_ScriptingDefineSymbolPredicate(ScriptingDefineSymbol, BuildTargetGroupName)]
         [SDK_ScriptingDefineSymbolPredicate(SDK_ScriptingDefineSymbolPredicateAttribute.RemovableSymbolPrefix + "STEAMVR_PLUGIN_1_2_1_OR_NEWER", BuildTargetGroupName)]
         private static bool IsPluginVersion121OrNewer()
         {
@@ -77,7 +90,12 @@ namespace VRTK
             }
 
             Type eventClass = utilsClass.GetNestedType("Event");
-            return eventClass != null && eventClass.GetMethod("Listen", BindingFlags.Public | BindingFlags.Static) != null;
+            if (eventClass == null)
+            {
+                return false;
+            }
+
+            return eventClass.GetMethod("Listen", BindingFlags.Public | BindingFlags.Static) != null;
         }
     }
 }

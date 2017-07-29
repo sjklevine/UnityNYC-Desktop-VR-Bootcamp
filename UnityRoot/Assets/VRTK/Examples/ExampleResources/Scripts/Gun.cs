@@ -4,9 +4,8 @@
 
     public class Gun : VRTK_InteractableObject
     {
-		[Header("Gun Options", order = 4)]
-		private GameObject bullet;
-		public float bulletSpeed = 1000f;
+        private GameObject bullet;
+        private float bulletSpeed = 1000f;
         private float bulletLife = 5f;
 
         public override void StartUsing(VRTK_InteractUse usingObject)
