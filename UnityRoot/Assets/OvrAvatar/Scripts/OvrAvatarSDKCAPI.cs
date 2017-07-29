@@ -340,9 +340,9 @@ public struct ovrAvatarMaterialState{
     }
 };
 
-public class OvrMaterialWrapper : OvrAvatarAsset
+public class OvrAvatarAssetMaterial : OvrAvatarAsset
 {
-    public OvrMaterialWrapper(UInt64 id, IntPtr mat) 
+    public OvrAvatarAssetMaterial(UInt64 id, IntPtr mat) 
     {
         assetID = id;
         material = CAPI.ovrAvatarAsset_GetMaterialState(mat);
@@ -410,6 +410,15 @@ public enum ovrAvatarHandGesture {
     GripSphere,
     GripCube,
     Count
+};
+
+public enum ovrAvatarBodyPartType
+{
+    Body,
+    Clothing,
+    Eyewear,
+    Hair,
+    Beard
 };
 
 namespace Oculus.Avatar

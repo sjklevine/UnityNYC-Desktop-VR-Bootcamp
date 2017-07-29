@@ -10,20 +10,24 @@ public class OvrAvatarRemoteDriver : OvrAvatarDriver
 
     IntPtr CurrentSDKPacket = IntPtr.Zero;
     float CurrentSDKPacketTime = 0f;
-  
+
+    const int MinPacketQueue = 1;
+    const int MaxPacketQueue = 4;
+
+    int CurrentSequence = -1;
+
     public void QueuePacket(int sequence, OvrAvatarPacket packet)
     {
-        packetQueue.Enqueue(packet);
+        if (sequence > CurrentSequence)
+        {
+            CurrentSequence = sequence;
+            packetQueue.Enqueue(packet);
+        }
     }
 
     public override void UpdateTransforms(IntPtr sdkAvatar)
     {
-        if (packetQueue.Count <= 0)
-        {
-            return;
-        }
-
-        if (CurrentSDKPacket == IntPtr.Zero)
+        if (CurrentSDKPacket == IntPtr.Zero && packetQueue.Count >= MinPacketQueue)
         {
             CurrentSDKPacket = packetQueue.Dequeue().ovrNativePacket;
         }
@@ -39,6 +43,12 @@ public class OvrAvatarRemoteDriver : OvrAvatarDriver
                 CAPI.ovrAvatarPacket_Free(CurrentSDKPacket);
                 CurrentSDKPacket = IntPtr.Zero;
                 CurrentSDKPacketTime = CurrentSDKPacketTime - PacketDuration;
+
+                //Throw away packets deemed too old.
+                while (packetQueue.Count > MaxPacketQueue)
+                {
+                    packetQueue.Dequeue();
+                }
             }
         }
     }

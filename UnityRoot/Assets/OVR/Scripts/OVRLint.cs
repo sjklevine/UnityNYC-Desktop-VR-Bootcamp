@@ -288,11 +288,20 @@ public class OVRLint : EditorWindow
 		}
 #endif
 
+#if UNITY_2017_2_OR_NEWER
+		if ((!PlayerSettings.MTRendering || !PlayerSettings.GetMobileMTRendering(BuildTargetGroup.Android)))
+#else
 		if ((!PlayerSettings.MTRendering || !PlayerSettings.mobileMTRendering))
+#endif
 		{
 		    AddFix ("Optimize MT Rendering", "For CPU performance, please enable multithreaded rendering.", delegate(UnityEngine.Object obj, bool last, int selected)
 		    {
+#if UNITY_2017_2_OR_NEWER
+				PlayerSettings.SetMobileMTRendering(BuildTargetGroup.Standalone, true);
+				PlayerSettings.SetMobileMTRendering(BuildTargetGroup.Android, true);
+#else
 				PlayerSettings.MTRendering = PlayerSettings.mobileMTRendering = true;
+#endif
 			}, null, "Fix");
 		}
 

@@ -90,7 +90,7 @@ public class OvrAvatarSDKManager : MonoBehaviour {
                             assetData = new OvrAvatarAssetTexture(assetID, asset);
                             break;
                         case ovrAvatarAssetType.Material:
-                            assetData = new OvrMaterialWrapper(assetID, asset);
+                            assetData = new OvrAvatarAssetMaterial(assetID, asset);
                             break;
                         default:
                             throw new NotImplementedException(string.Format("Unsupported asset type format {0}", assetType.ToString()));
