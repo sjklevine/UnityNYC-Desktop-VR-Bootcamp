@@ -409,7 +409,7 @@ namespace VRTK
         {
 #if UNITY_5_6_OR_NEWER
             float gpuTimeLastFrame;
-            if (VRStats.TryGetGPUTimeLastFrame(out gpuTimeLastFrame))
+            if (UnityEngine.XR.XRStats.TryGetGPUTimeLastFrame(out gpuTimeLastFrame))
             {
                 return gpuTimeLastFrame;
             }
@@ -488,6 +488,14 @@ namespace VRTK
                 {
                     return false;
                 }
+
+				// Sam additions - 1/24/2018
+				if ((group == BuildTargetGroup.Facebook) || (group == BuildTargetGroup.Switch))
+				{
+					return false;
+				}
+
+				
 
                 string targetGroupName = Enum.GetName(typeof(BuildTargetGroup), group);
                 FieldInfo targetGroupFieldInfo = typeof(BuildTargetGroup).GetField(targetGroupName, BindingFlags.Public | BindingFlags.Static);

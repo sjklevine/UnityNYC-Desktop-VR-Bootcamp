@@ -1,4 +1,6 @@
-﻿//======= Copyright (c) Valve Corporation, All rights reserved. ===============
+﻿#pragma warning disable 0618 // For UnityEngine.GUILayer
+
+//======= Copyright (c) Valve Corporation, All rights reserved. ===============
 //
 // Purpose: Adds SteamVR render support to existing camera objects
 //
@@ -33,8 +35,8 @@ public class SteamVR_Camera : MonoBehaviour
 
 	static public float sceneResolutionScale
 	{
-		get { return UnityEngine.VR.VRSettings.renderScale; }
-		set { UnityEngine.VR.VRSettings.renderScale = value; }
+		get { return UnityEngine.XR.XRSettings.eyeTextureResolutionScale; }
+		set { UnityEngine.XR.XRSettings.eyeTextureResolutionScale = value; }
 	}
 
 	#region Enable / Disable

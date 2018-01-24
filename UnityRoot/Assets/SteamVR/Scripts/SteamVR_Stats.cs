@@ -1,4 +1,6 @@
-﻿//======= Copyright (c) Valve Corporation, All rights reserved. ===============
+﻿#pragma warning disable 0618
+
+//======= Copyright (c) Valve Corporation, All rights reserved. ===============
 //
 // Purpose: Helper to display various hmd stats via GUIText
 //

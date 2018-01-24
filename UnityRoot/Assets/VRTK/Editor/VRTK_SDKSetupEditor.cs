@@ -342,7 +342,7 @@
                     VRTK_SDKManager.AvailableControllerSDKInfos
                 }
                 .SelectMany(infos => infos.Select(sdkInfo => sdkInfo.description.vrDeviceName))
-                .Concat(VRSettings.supportedDevices)
+                .Concat(UnityEngine.XR.XRSettings.supportedDevices)
                 .Concat(new[] { "None" })
                 .Distinct()
                 .Select(deviceName => GUI.skin.label.CalcSize(new GUIContent(deviceName)).x)
@@ -398,7 +398,9 @@
             [InitializeOnLoadMethod]
             private static void ListenToPlayModeChanges()
             {
+				#pragma warning disable 0618
                 EditorApplication.playmodeStateChanged += () =>
+				#pragma warning restore
                 {
                     if (EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isPlaying)
                     {

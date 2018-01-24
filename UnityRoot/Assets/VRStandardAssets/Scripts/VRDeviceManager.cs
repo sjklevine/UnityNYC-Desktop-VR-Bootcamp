@@ -33,7 +33,7 @@ namespace VRStandardAssets.Utils
             {
                 s_Instance = this;
                 DontDestroyOnLoad (this);
-				VRSettings.renderScale = m_RenderScale;
+				UnityEngine.XR.XRSettings.eyeTextureResolutionScale = m_RenderScale;
             }
             else if (this != s_Instance)
             {
