@@ -1,4 +1,4 @@
-/************************************************************************************
+﻿/************************************************************************************
 
 Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
 
@@ -27,7 +27,7 @@ using UnityEngine;
 
 internal static class OVRPlugin
 {
-	public static readonly System.Version wrapperVersion = OVRP_1_16_0.version;
+	public static readonly System.Version wrapperVersion = OVRP_1_21_0.version;
 
 	private static System.Version _version;
 	public static System.Version version
@@ -234,14 +234,14 @@ internal static class OVRPlugin
 		R11G11B10_FP = 3,
 		B8G8R8A8_sRGB = 4,
 		B8G8R8A8 = 5,
+		R5G6B5 = 11,
 		EnumSize = 0x7fffffff
 	}
 
 	public enum PlatformUI
 	{
 		None = -1,
-		GlobalMenu = 0,
-		ConfirmQuit,
+		ConfirmQuit = 1,
 		GlobalMenuTutorial,
 	}
 
@@ -260,6 +260,8 @@ internal static class OVRPlugin
 		GearVR_R322, // Commercial 1
 		GearVR_R323, // Commercial 2 (USB Type C)
 		GearVR_R324, // Commercial 3 (USB Type C)
+		GearVR_R325, // Commercial 4 (USB Type C)
+		Oculus_Go,
 
 		Rift_DK1 = 0x1000,
 		Rift_DK2,
@@ -272,6 +274,7 @@ internal static class OVRPlugin
 		Cylinder = 1,
 		Cubemap = 2,
 		OffcenterCubemap = 4,
+		Equirect = 5,
 	}
 
 	public enum Step
@@ -285,6 +288,48 @@ internal static class OVRPlugin
 		None = 0,
 		WebCamera0 = 100,
 		WebCamera1 = 101,
+		ZEDCamera = 300,
+	}
+
+	public enum CameraDeviceDepthSensingMode
+	{
+		Standard = 0,
+		Fill = 1,
+	}
+
+	public enum CameraDeviceDepthQuality
+	{
+		Low = 0,
+		Medium = 1,
+		High = 2,
+	}
+
+	public enum TiledMultiResLevel
+	{
+		Off = 0,
+		LMSLow = 1,
+		LMSMedium = 2,
+		LMSHigh = 3,
+		EnumSize = 0x7FFFFFFF
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct CameraDeviceIntrinsicsParameters
+	{
+		float fx; /* Focal length in pixels along x axis. */
+		float fy; /* Focal length in pixels along y axis. */
+		float cx; /* Optical center along x axis, defined in pixels (usually close to width/2). */
+		float cy; /* Optical center along y axis, defined in pixels (usually close to height/2). */
+		double disto0; /* Distortion factor : [ k1, k2, p1, p2, k3 ]. Radial (k1,k2,k3) and Tangential (p1,p2) distortion.*/
+		double disto1;
+		double disto2;
+		double disto3;
+		double disto4;
+		float v_fov; /* Vertical field of view after stereo rectification, in degrees. */
+		float h_fov; /* Horizontal field of view after stereo rectification, in degrees.*/
+		float d_fov; /* Diagonal field of view after stereo rectification, in degrees.*/
+		int w; /* Resolution width */
+		int h; /* Resolution height */
 	}
 
 	private const int OverlayShapeFlagShift = 4;
@@ -315,6 +360,10 @@ internal static class OVRPlugin
 		public float x;
 		public float y;
 		public float z;
+		public override string ToString()
+		{
+			return string.Format("{0}, {1}, {2}", x, y, z);
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -324,6 +373,10 @@ internal static class OVRPlugin
 		public float y;
 		public float z;
 		public float w;
+		public override string ToString()
+		{
+			return string.Format("{0}, {1}, {2}, {3}", x, y, z, w);
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -331,6 +384,10 @@ internal static class OVRPlugin
 	{
 		public Quatf Orientation;
 		public Vector3f Position;
+		public override string ToString()
+		{
+			return string.Format("Position ({0}), Orientation({1})", Position, Orientation);
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -692,6 +749,19 @@ internal static class OVRPlugin
 		[MarshalAs(UnmanagedType.ByValArray, SizeConst=2)]
 		public Rectf[] VisibleRect;
 		public Sizei MaxViewportSize;
+		EyeTextureFormat DepthFormat;
+
+		public override string ToString ()
+		{
+			string delim = ", ";
+			return Shape.ToString()
+				+ delim + Layout.ToString()
+				+ delim + TextureSize.w.ToString() + "x" + TextureSize.h.ToString()
+				+ delim + MipLevels.ToString()
+				+ delim + SampleCount.ToString()
+				+ delim + Format.ToString()
+				+ delim + LayerFlags.ToString();
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -884,6 +954,27 @@ internal static class OVRPlugin
 
 	public static bool hasVrFocus { get { return OVRP_1_1_0.ovrp_GetAppHasVrFocus() == Bool.True; } }
 
+	public static bool hasInputFocus
+	{
+		get
+		{
+			if (version >= OVRP_1_18_0.version)
+			{
+				Bool inputFocus = Bool.False;
+				Result result = OVRP_1_18_0.ovrp_GetAppHasInputFocus(out inputFocus);
+				if (Result.Success == result)
+					return inputFocus == Bool.True;
+				else
+				{
+					Debug.LogWarning("ovrp_GetAppHasInputFocus return " + result);
+					return false;
+				}
+			}
+
+			return true;
+		}
+	}
+
 	public static bool shouldQuit { get { return OVRP_1_1_0.ovrp_GetAppShouldQuit() == Bool.True; } }
 
 	public static bool shouldRecenter { get { return OVRP_1_1_0.ovrp_GetAppShouldRecenter() == Bool.True; } }
@@ -976,7 +1067,7 @@ internal static class OVRPlugin
 					flags |= (uint)(shape) << OverlayShapeFlagShift;
 				else
 #else
-				if (shape == OverlayShape.Cubemap && version >= OVRP_1_10_0.version && version < OVRP_1_16_0.version)
+				if (shape == OverlayShape.Cubemap && version >= OVRP_1_10_0.version)
 					flags |= (uint)(shape) << OverlayShapeFlagShift;
 				else if (shape == OverlayShape.Cylinder && version >= OVRP_1_16_0.version)
 					flags |= (uint)(shape) << OverlayShapeFlagShift;
@@ -995,8 +1086,18 @@ internal static class OVRPlugin
 				return false;
 			}
 
+			if (shape == OverlayShape.Equirect)
+			{
+#if UNITY_ANDROID
+				if (version >= OVRP_1_21_0.version)
+					flags |= (uint)(shape) << OverlayShapeFlagShift;
+				else
+#endif
+				return false;
+			}
+
 			if (version >= OVRP_1_15_0.version && layerId != -1)
-				return OVRP_1_15_0.ovrp_EnqueueSubmitLayer(flags, leftTexture, rightTexture, layerId, frameIndex, pose, scale, layerIndex) == Result.Success;
+				return OVRP_1_15_0.ovrp_EnqueueSubmitLayer(flags, leftTexture, rightTexture, layerId, frameIndex, ref pose, ref scale, layerIndex) == Result.Success;
 
 			return OVRP_1_6_0.ovrp_SetOverlayQuad3(flags, leftTexture, rightTexture, IntPtr.Zero, pose, scale, layerIndex) == Bool.True;
 		}
@@ -1343,6 +1444,47 @@ internal static class OVRPlugin
 		}
 	}
 
+	public static bool SetHandNodePoseStateLatency(double latencyInSeconds)
+	{
+		if (version >= OVRP_1_18_0.version)
+		{
+			Result result = OVRP_1_18_0.ovrp_SetHandNodePoseStateLatency(latencyInSeconds);
+			if (result == Result.Success)
+			{
+				return true;
+			}
+			else
+			{
+				Debug.LogWarning("ovrp_SetHandNodePoseStateLatency return " + result);
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	public static double GetHandNodePoseStateLatency()
+	{
+		if (version >= OVRP_1_18_0.version)
+		{
+			double value = 0.0;
+			if (OVRP_1_18_0.ovrp_GetHandNodePoseStateLatency(out value) == OVRPlugin.Result.Success)
+			{
+				return value;
+			}
+			else
+			{
+				return 0.0;
+			}
+		}
+		else
+		{
+			return 0.0;
+		}
+	}
+
 	public static EyeTextureFormat GetDesiredEyeTextureFormat()
 	{
 		if (version >= OVRP_1_11_0.version)
@@ -1570,6 +1712,7 @@ internal static class OVRPlugin
 		return OVRP_1_0_0.ovrp_RecenterTrackingOrigin((uint)flags) == Bool.True;
 	}
 
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 	public static bool UpdateCameraDevices()
 	{
 		if (version >= OVRP_1_16_0.version)
@@ -1681,7 +1824,7 @@ internal static class OVRPlugin
 			Result result = OVRP_1_16_0.ovrp_GetCameraDeviceColorFrameSize(cameraDevice, out size);
 			if (result != Result.Success)
 			{
-				Debug.LogWarning("ovrp_SetCameraDevicePreferredColorFrameSize return " + result);
+				Debug.LogWarning("ovrp_GetCameraDeviceColorFrameSize return " + result);
 				return null;
 			}
 			IntPtr pixels;
@@ -1711,8 +1854,321 @@ internal static class OVRPlugin
 		}
 	}
 
+	public static bool DoesCameraDeviceSupportDepth(CameraDevice cameraDevice)
+	{
+		if (version >= OVRP_1_17_0.version)
+		{
+			Bool supportDepth;
+			Result result = OVRP_1_17_0.ovrp_DoesCameraDeviceSupportDepth(cameraDevice, out supportDepth);
+			return result == Result.Success && supportDepth == Bool.True;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	public static bool SetCameraDeviceDepthSensingMode(CameraDevice camera, CameraDeviceDepthSensingMode depthSensoringMode)
+	{
+		if (version >= OVRP_1_17_0.version)
+		{
+			Result result = OVRP_1_17_0.ovrp_SetCameraDeviceDepthSensingMode(camera, depthSensoringMode);
+			return result == Result.Success;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	public static bool SetCameraDevicePreferredDepthQuality(CameraDevice camera, CameraDeviceDepthQuality depthQuality)
+	{
+		if (version >= OVRP_1_17_0.version)
+		{
+			Result result = OVRP_1_17_0.ovrp_SetCameraDevicePreferredDepthQuality(camera, depthQuality);
+			return result == Result.Success;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	public static bool IsCameraDeviceDepthFrameAvailable(CameraDevice cameraDevice)
+	{
+		if (version >= OVRP_1_17_0.version)
+		{
+			Bool available;
+			Result result = OVRP_1_17_0.ovrp_IsCameraDeviceDepthFrameAvailable(cameraDevice, out available);
+			return result == Result.Success && available == Bool.True;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	private static Texture2D cachedCameraDepthTexture = null;
+	public static Texture2D GetCameraDeviceDepthFrameTexture(CameraDevice cameraDevice)
+	{
+		if (version >= OVRP_1_17_0.version)
+		{
+			Sizei size = new Sizei();
+			Result result = OVRP_1_17_0.ovrp_GetCameraDeviceDepthFrameSize(cameraDevice, out size);
+			if (result != Result.Success)
+			{
+				Debug.LogWarning("ovrp_GetCameraDeviceDepthFrameSize return " + result);
+				return null;
+			}
+			IntPtr depthData;
+			int rowPitch;
+			result = OVRP_1_17_0.ovrp_GetCameraDeviceDepthFramePixels(cameraDevice, out depthData, out rowPitch);
+			if (result != Result.Success)
+			{
+				Debug.LogWarning("ovrp_GetCameraDeviceDepthFramePixels return " + result);
+				return null;
+			}
+			if (rowPitch != size.w * 4)
+			{
+				Debug.LogWarning(string.Format("RowPitch mismatch, expected {0}, get {1}", size.w * 4, rowPitch));
+				return null;
+			}
+			if (!cachedCameraDepthTexture || cachedCameraDepthTexture.width != size.w || cachedCameraDepthTexture.height != size.h)
+			{
+				cachedCameraDepthTexture = new Texture2D(size.w, size.h, TextureFormat.RFloat, false);
+				cachedCameraDepthTexture.filterMode = FilterMode.Point;
+			}
+			cachedCameraDepthTexture.LoadRawTextureData(depthData, rowPitch * size.h);
+			cachedCameraDepthTexture.Apply();
+			return cachedCameraDepthTexture;
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	private static Texture2D cachedCameraDepthConfidenceTexture = null;
+	public static Texture2D GetCameraDeviceDepthConfidenceTexture(CameraDevice cameraDevice)
+	{
+		if (version >= OVRP_1_17_0.version)
+		{
+			Sizei size = new Sizei();
+			Result result = OVRP_1_17_0.ovrp_GetCameraDeviceDepthFrameSize(cameraDevice, out size);
+			if (result != Result.Success)
+			{
+				Debug.LogWarning("ovrp_GetCameraDeviceDepthFrameSize return " + result);
+				return null;
+			}
+			IntPtr confidenceData;
+			int rowPitch;
+			result = OVRP_1_17_0.ovrp_GetCameraDeviceDepthConfidencePixels(cameraDevice, out confidenceData, out rowPitch);
+			if (result != Result.Success)
+			{
+				Debug.LogWarning("ovrp_GetCameraDeviceDepthConfidencePixels return " + result);
+				return null;
+			}
+			if (rowPitch != size.w * 4)
+			{
+				Debug.LogWarning(string.Format("RowPitch mismatch, expected {0}, get {1}", size.w * 4, rowPitch));
+				return null;
+			}
+			if (!cachedCameraDepthConfidenceTexture || cachedCameraDepthConfidenceTexture.width != size.w || cachedCameraDepthConfidenceTexture.height != size.h)
+			{
+				cachedCameraDepthConfidenceTexture = new Texture2D(size.w, size.h, TextureFormat.RFloat, false);
+			}
+			cachedCameraDepthConfidenceTexture.LoadRawTextureData(confidenceData, rowPitch * size.h);
+			cachedCameraDepthConfidenceTexture.Apply();
+			return cachedCameraDepthConfidenceTexture;
+		}
+		else
+		{
+			return null;
+		}
+	}
+#endif
+
+	public static bool tiledMultiResSupported
+	{
+		get
+		{
+			if (version >= OVRP_1_21_0.version)
+			{
+				Bool supported;
+				Result result = OVRP_1_21_0.ovrp_GetTiledMultiResSupported(out supported);
+				if (result == Result.Success)
+				{
+					return supported == Bool.True;
+				}
+				else
+				{
+					Debug.LogWarning("ovrp_GetTiledMultiResSupported return " + result);
+					return false;
+				}
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	public static TiledMultiResLevel tiledMultiResLevel
+	{
+		get
+		{
+			if (version >= OVRP_1_21_0.version && tiledMultiResSupported)
+			{
+				TiledMultiResLevel level;
+				Result result = OVRP_1_21_0.ovrp_GetTiledMultiResLevel(out level);
+				if (result != Result.Success)
+				{
+					Debug.LogWarning("ovrp_GetTiledMultiResLevel return " + result);
+				}
+				return level;
+			}
+			else
+			{
+				return TiledMultiResLevel.Off;
+			}
+		}
+		set
+		{
+			if (version >= OVRP_1_21_0.version && tiledMultiResSupported)
+			{
+				Result result = OVRP_1_21_0.ovrp_SetTiledMultiResLevel(value);
+				if (result != Result.Success)
+				{
+					Debug.LogWarning("ovrp_SetTiledMultiResLevel return " + result);
+				}
+			}
+		}
+	}
+
+	public static bool gpuUtilSupported
+	{
+		get
+		{
+			if (version >= OVRP_1_21_0.version)
+			{
+				Bool supported;
+				Result result = OVRP_1_21_0.ovrp_GetGPUUtilSupported(out supported);
+				if (result == Result.Success)
+				{
+					return supported == Bool.True;
+				}
+				else
+				{
+					Debug.LogWarning("ovrp_GetGPUUtilSupported return " + result);
+					return false;
+				}
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	public static float gpuUtilLevel
+	{
+		get
+		{
+			if (version >= OVRP_1_21_0.version && gpuUtilSupported)
+			{
+				float level;
+				Result result = OVRP_1_21_0.ovrp_GetGPUUtilLevel(out level);
+				if (result == Result.Success)
+				{
+					return level;
+				}
+				else
+				{
+					Debug.LogWarning("ovrp_GetGPUUtilLevel return " + result);
+					return 0.0f;
+				}
+			}
+			else
+			{
+				return 0.0f;
+			}
+		}
+	}
+
+	private static OVRNativeBuffer _nativeSystemDisplayFrequenciesAvailable = null;
+	private static float[] _cachedSystemDisplayFrequenciesAvailable = null;
+	public static float[] systemDisplayFrequenciesAvailable
+	{
+		get
+		{
+			if (_cachedSystemDisplayFrequenciesAvailable == null)
+			{
+				_cachedSystemDisplayFrequenciesAvailable = new float[0];
+
+				if (version >= OVRP_1_21_0.version)
+				{
+					int numFrequencies = 0;
+					Result result = OVRP_1_21_0.ovrp_GetSystemDisplayAvailableFrequencies(IntPtr.Zero, out numFrequencies);
+					if (result == Result.Success)
+					{
+						if (numFrequencies > 0)
+						{
+							int maxNumElements = numFrequencies;
+							_nativeSystemDisplayFrequenciesAvailable = new OVRNativeBuffer(sizeof(float) * maxNumElements);
+							result = OVRP_1_21_0.ovrp_GetSystemDisplayAvailableFrequencies(_nativeSystemDisplayFrequenciesAvailable.GetPointer(), out numFrequencies);
+							if (result == Result.Success)
+							{
+								int numElementsToCopy = (numFrequencies <= maxNumElements) ? numFrequencies : maxNumElements;
+								if (numElementsToCopy > 0)
+								{
+									_cachedSystemDisplayFrequenciesAvailable = new float[numElementsToCopy];
+									Marshal.Copy(_nativeSystemDisplayFrequenciesAvailable.GetPointer(), _cachedSystemDisplayFrequenciesAvailable, 0, numElementsToCopy);
+								}
+							}
+						}
+					}
+				}
+			}
+
+			return _cachedSystemDisplayFrequenciesAvailable;
+		}
+	}
+
+	public static float systemDisplayFrequency
+	{
+		get
+		{
+			if (version >= OVRP_1_21_0.version)
+			{
+				float displayFrequency;
+				Result result = OVRP_1_21_0.ovrp_GetSystemDisplayFrequency2(out displayFrequency);
+				if (result == Result.Success)
+				{
+					return displayFrequency;
+				}
+
+				return 0.0f;
+			}
+			else if (version >= OVRP_1_1_0.version)
+			{
+				return OVRP_1_1_0.ovrp_GetSystemDisplayFrequency();
+			}
+			else
+			{
+				return 0.0f;
+			}
+		}
+		set
+		{
+			if (version >= OVRP_1_21_0.version)
+			{
+				OVRP_1_21_0.ovrp_SetSystemDisplayFrequency(value);
+			}
+		}
+	}
+
 	private const string pluginName = "OVRPlugin";
-	private static Version _versionZero = new System.Version(0, 0, 0);
+	private static System.Version _versionZero = new System.Version(0, 0, 0);
 
 	private static class OVRP_0_1_0
 	{
@@ -2135,13 +2591,14 @@ internal static class OVRPlugin
 		public static extern Result ovrp_GetLayerTexturePtr(int layerId, int stage, Eye eyeId, ref IntPtr textureHandle);
 
 		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
-		public static extern Result ovrp_EnqueueSubmitLayer(uint flags, IntPtr textureLeft, IntPtr textureRight, int layerId, int frameIndex, Posef pose, Vector3f scale, int layerIndex);
+		public static extern Result ovrp_EnqueueSubmitLayer(uint flags, IntPtr textureLeft, IntPtr textureRight, int layerId, int frameIndex, ref Posef pose, ref Vector3f scale, int layerIndex);
 	}
 
 	private static class OVRP_1_16_0
 	{
 		public static readonly System.Version version = new System.Version(1, 16, 0);
 
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern Result ovrp_UpdateCameraDevices();
 
@@ -2168,8 +2625,100 @@ internal static class OVRPlugin
 
 		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern Result ovrp_GetCameraDeviceColorFrameBgraPixels(CameraDevice cameraDevice, out IntPtr colorFrameBgraPixels, out int colorFrameRowPitch);
+#endif
 
 		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern Result ovrp_GetControllerState4(uint controllerMask, ref ControllerState4 controllerState);
+	}
+
+	private static class OVRP_1_17_0
+	{
+		public static readonly System.Version version = new System.Version(1, 17, 0);
+
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_GetExternalCameraPose(CameraDevice camera, out Posef cameraPose);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_ConvertPoseToCameraSpace(CameraDevice camera, ref Posef trackingSpacePose, out Posef cameraSpacePose);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_GetCameraDeviceIntrinsicsParameters(CameraDevice camera, out Bool supportIntrinsics, out CameraDeviceIntrinsicsParameters intrinsicsParameters);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_DoesCameraDeviceSupportDepth(CameraDevice camera, out Bool supportDepth);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_GetCameraDeviceDepthSensingMode(CameraDevice camera, out CameraDeviceDepthSensingMode depthSensoringMode);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_SetCameraDeviceDepthSensingMode(CameraDevice camera, CameraDeviceDepthSensingMode depthSensoringMode);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_GetCameraDevicePreferredDepthQuality(CameraDevice camera, out CameraDeviceDepthQuality depthQuality);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_SetCameraDevicePreferredDepthQuality(CameraDevice camera, CameraDeviceDepthQuality depthQuality);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_IsCameraDeviceDepthFrameAvailable(CameraDevice camera, out Bool available);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_GetCameraDeviceDepthFrameSize(CameraDevice camera, out Sizei depthFrameSize);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_GetCameraDeviceDepthFramePixels(CameraDevice cameraDevice, out IntPtr depthFramePixels, out int depthFrameRowPitch);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_GetCameraDeviceDepthConfidencePixels(CameraDevice cameraDevice, out IntPtr depthConfidencePixels, out int depthConfidenceRowPitch);
+#endif
+	}
+
+	private static class OVRP_1_18_0
+	{
+		public static readonly System.Version version = new System.Version(1, 18, 0);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_SetHandNodePoseStateLatency(double latencyInSeconds);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_GetHandNodePoseStateLatency(out double latencyInSeconds);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_GetAppHasInputFocus(out Bool appHasInputFocus);
+	}
+
+	private static class OVRP_1_19_0
+	{
+		public static readonly System.Version version = new System.Version(1, 19, 0);
+	}
+
+	private static class OVRP_1_21_0
+	{
+		public static readonly System.Version version = new System.Version(1, 21, 0);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_GetTiledMultiResSupported(out Bool foveationSupported);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_GetTiledMultiResLevel(out TiledMultiResLevel level);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_SetTiledMultiResLevel(TiledMultiResLevel level);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_GetGPUUtilSupported(out Bool gpuUtilSupported);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_GetGPUUtilLevel(out float gpuUtil);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_GetSystemDisplayFrequency2(out float systemDisplayFrequency);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_GetSystemDisplayAvailableFrequencies(IntPtr systemDisplayAvailableFrequencies, out int numFrequencies);
+
+		[DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern Result ovrp_SetSystemDisplayFrequency(float requestedFrequency);
 	}
 }

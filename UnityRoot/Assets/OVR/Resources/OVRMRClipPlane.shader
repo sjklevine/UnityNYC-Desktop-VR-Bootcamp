@@ -1,6 +1,4 @@
-﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-Shader "Unlit/OVRMRClipPlane"
+﻿Shader "Oculus/OVRMRClipPlane"
 {
 	Properties
 	{
@@ -36,11 +34,7 @@ Shader "Unlit/OVRMRClipPlane"
 			v2f vert (appdata v)
 			{
 				v2f o;
-#if UNITY_VERSION >= 540
 				o.vertex = UnityObjectToClipPos(v.vertex);
-#else
-				o.vertex = UnityObjectToClipPos(v.vertex);
-#endif
 				o.vertex *= _Visible;
 				return o;
 			}

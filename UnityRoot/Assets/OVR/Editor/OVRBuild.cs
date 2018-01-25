@@ -31,17 +31,9 @@ partial class OculusBuildApp
 	{
 		if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows)
 		{
-#if UNITY_5_6_OR_NEWER
 			EditorUserBuildSettings.SwitchActiveBuildTarget (BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows);
-#else
-			EditorUserBuildSettings.SwitchActiveBuildTarget (BuildTarget.StandaloneWindows);
-#endif
 		}
-#if UNITY_5_5_OR_NEWER
 		UnityEditorInternal.VR.VREditor.SetVREnabledOnTargetGroup(BuildTargetGroup.Standalone, true);
-#elif UNITY_5_4_OR_NEWER
-		UnityEditorInternal.VR.VREditor.SetVREnabled(BuildTargetGroup.Standalone, true);
-#endif
 		PlayerSettings.virtualRealitySupported = true;
 		AssetDatabase.SaveAssets();
 	}
@@ -52,18 +44,10 @@ partial class OculusBuildApp
 
 		if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
 		{
-#if UNITY_5_6_OR_NEWER
 			EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
-#else
-			EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTarget.Android);
-#endif
 		}
 
-#if UNITY_5_5_OR_NEWER
 		UnityEditorInternal.VR.VREditor.SetVREnabledOnTargetGroup(BuildTargetGroup.Standalone, true);
-#elif UNITY_5_4_OR_NEWER
-		UnityEditorInternal.VR.VREditor.SetVREnabled(BuildTargetGroup.Android, true);
-#endif
 		PlayerSettings.virtualRealitySupported = true;
 		AssetDatabase.SaveAssets();
 	}

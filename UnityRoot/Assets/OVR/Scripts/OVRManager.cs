@@ -19,15 +19,13 @@ limitations under the License.
 
 ************************************************************************************/
 
-#if !UNITY_5_4_OR_NEWER
-#error Oculus Utilities require Unity 5.4 or higher.
+#if !UNITY_5_6_OR_NEWER
+#error Oculus Utilities require Unity 5.6 or higher.
 #endif
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using VR = UnityEngine.VR;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -48,6 +46,14 @@ public class OVRManager : MonoBehaviour
 		Default = OVRPlugin.EyeTextureFormat.Default,
 		R16G16B16A16_FP = OVRPlugin.EyeTextureFormat.R16G16B16A16_FP,
 		R11G11B10_FP = OVRPlugin.EyeTextureFormat.R11G11B10_FP,
+	}
+
+	public enum TiledMultiResLevel
+	{
+		Off = OVRPlugin.TiledMultiResLevel.Off,
+		LMSLow = OVRPlugin.TiledMultiResLevel.LMSLow,
+		LMSMedium = OVRPlugin.TiledMultiResLevel.LMSMedium,
+		LMSHigh = OVRPlugin.TiledMultiResLevel.LMSHigh,
 	}
 
 	/// <summary>
@@ -116,6 +122,16 @@ public class OVRManager : MonoBehaviour
 	/// Occurs when VR Focus is lost.
 	/// </summary>
 	public static event Action VrFocusLost;
+
+	/// <summary>
+	/// Occurs when Input Focus is acquired.
+	/// </summary>
+	public static event Action InputFocusAcquired;
+
+	/// <summary>
+	/// Occurs when Input Focus is lost.
+	/// </summary>
+	public static event Action InputFocusLost;
 
 	/// <summary>
 	/// Occurs when the active Audio Out device has changed and a restart is needed.
@@ -216,6 +232,18 @@ public class OVRManager : MonoBehaviour
 		}
 	}
 
+	private static bool _hadInputFocus = true;
+	/// <summary>
+	/// If true, the app has Input Focus.
+	/// </summary>
+	public static bool hasInputFocus
+	{
+		get
+		{
+			return OVRPlugin.hasInputFocus;
+		}
+	}
+
 	/// <summary>
 	/// If true, then the Oculus health and safety warning (HSW) is currently visible.
 	/// </summary>
@@ -284,8 +312,21 @@ public class OVRManager : MonoBehaviour
 	/// <summary>
 	/// If true, dynamic resolution will be enabled
 	/// </summary>
-	[Tooltip("If true, dynamic resolution will be enabled")]
+	[Tooltip("If true, dynamic resolution will be enabled On PC")]
 	public bool enableAdaptiveResolution = false;
+
+	/// <summary>
+	/// Adaptive Resolution is based on Unity engine's renderViewportScale/eyeTextureResolutionScale feature 
+	/// But renderViewportScale was broken in an array of Unity engines, this function help to filter out those broken engines
+	/// </summary>
+	public static bool IsAdaptiveResSupportedByEngine()
+	{
+#if UNITY_2017_1_OR_NEWER
+		return Application.unityVersion != "2017.1.0f1";
+#else
+		return false;
+#endif
+	}
 
 	/// <summary>
 	/// Min RenderScale the app can reach under adaptive resolution mode ( enableAdaptiveResolution = true );
@@ -301,41 +342,179 @@ public class OVRManager : MonoBehaviour
 	[Tooltip("Max RenderScale the app can reach under adaptive resolution mode")]
 	public float maxRenderScale = 1.0f;
 
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+	/// <summary>
+	/// If true, the MixedRealityCapture properties will be displayed
+	/// </summary>
+	[HideInInspector]
+	public bool expandMixedRealityCapturePropertySheet = false;
+
+
 	/// <summary>
 	/// If true, Mixed Reality mode will be enabled
 	/// </summary>
-	[Tooltip("If true, Mixed Reality mode will be enabled. It would be always set to false when the game is launching without editor")]
+	[HideInInspector, Tooltip("If true, Mixed Reality mode will be enabled. It would be always set to false when the game is launching without editor")]
 	public bool enableMixedReality = false;
+
+	public enum CompositionMethod
+	{
+		External,
+		Direct,
+		Sandwich
+	}
+
+	/// <summary>
+	/// Composition method
+	/// </summary>
+	[HideInInspector]
+	public CompositionMethod compositionMethod = CompositionMethod.External;
+
+	/// <summary>
+	/// Extra hidden layers
+	/// </summary>
+	[HideInInspector, Tooltip("Extra hidden layers")]
+	public LayerMask extraHiddenLayers;
+
 
 	/// <summary>
 	/// If true, Mixed Reality mode will use direct composition from the first web camera
 	/// </summary>
-	[Tooltip("Use Direct Composition from the web camera when running Mixed Reality")]
-	public bool useDirectComposition = false;
+
+	public enum CameraDevice
+	{
+		WebCamera0,
+		WebCamera1,
+		ZEDCamera
+	}
 
 	/// <summary>
-	/// ToleranceA is how heavily to weight non-green values in a pixel
+	/// The camera device for direct composition
 	/// </summary>
-	[Tooltip("ToleranceA is how heavily to weight non-green values in a pixel")]
-	public float greenScreenColorToleranceA = 20.0f;
+	[HideInInspector, Tooltip("The camera device for direct composition")]
+	public CameraDevice capturingCameraDevice = CameraDevice.WebCamera0;
 
 	/// <summary>
-	/// ToleranceB how heavily to weight the green value. If mid-range greens don't seem to cut out, increasing B or decreasing A may help.
+	/// Flip the camera frame horizontally
 	/// </summary>
-	[Tooltip("ToleranceB how heavily to weight the green value. If mid-range greens don't seem to cut out, increasing B or decreasing A may help.")]
-	public float greenScreenColorToleranceB = 15.0f;
+	[HideInInspector, Tooltip("Flip the camera frame horizontally")]
+	public bool flipCameraFrameHorizontally = false;
 
 	/// <summary>
-	/// alpha cutoff is evaluated after doChroma and before the bleed test to take pixels with a low alpha value and fully discard them.
+	/// Flip the camera frame vertically
 	/// </summary>
-	[Tooltip("alpha cutoff is evaluated after doChroma and before the bleed test to take pixels with a low alpha value and fully discard them.")]
-	public float greenScreenColorAlphaCutoff = 0.01f;
+	[HideInInspector, Tooltip("Flip the camera frame vertically")]
+	public bool flipCameraFrameVertically = false;
 
 	/// <summary>
-	///  the shadow threshold is to get rid of really dark pixels to mitigate the shadow casting issues
+	/// Delay the touch controller pose by a short duration (0 to 0.5 second) to match the physical camera latency
 	/// </summary>
-	[Tooltip("the shadow threshold is to get rid of really dark pixels to mitigate the shadow casting issues")]
-	public float greenScreenColorShadows = 0.02f;
+	[HideInInspector, Tooltip("Delay the touch controller pose by a short duration (0 to 0.5 second) to match the physical camera latency")]
+	public float handPoseStateLatency = 0.0f;
+
+	/// <summary>
+	/// Delay the foreground / background image in the sandwich composition to match the physical camera latency. The maximum duration is sandwichCompositionBufferedFrames / {Game FPS}
+	/// </summary>
+	[HideInInspector, Tooltip("Delay the foreground / background image in the sandwich composition to match the physical camera latency. The maximum duration is sandwichCompositionBufferedFrames / {Game FPS}")]
+	public float sandwichCompositionRenderLatency = 0.0f;
+
+	/// <summary>
+	/// The number of frames are buffered in the SandWich composition. The more buffered frames, the more memory it would consume.
+	/// </summary>
+	[HideInInspector, Tooltip("The number of frames are buffered in the SandWich composition. The more buffered frames, the more memory it would consume.")]
+	public int sandwichCompositionBufferedFrames = 8;
+
+
+	/// <summary>
+	/// Chroma Key Color
+	/// </summary>
+	[HideInInspector, Tooltip("Chroma Key Color")]
+	public Color chromaKeyColor = Color.green;
+
+	/// <summary>
+	/// Chroma Key Similarity
+	/// </summary>
+	[HideInInspector, Tooltip("Chroma Key Similarity")]
+	public float chromaKeySimilarity = 0.60f;
+
+	/// <summary>
+	/// Chroma Key Smooth Range
+	/// </summary>
+	[HideInInspector, Tooltip("Chroma Key Smooth Range")]
+	public float chromaKeySmoothRange = 0.03f;
+
+	/// <summary>
+	///  Chroma Key Spill Range
+	/// </summary>
+	[HideInInspector, Tooltip("Chroma Key Spill Range")]
+	public float chromaKeySpillRange = 0.06f;
+
+	/// <summary>
+	/// Use dynamic lighting (Depth sensor required)
+	/// </summary>
+	[HideInInspector, Tooltip("Use dynamic lighting (Depth sensor required)")]
+	public bool useDynamicLighting = false;
+
+	public enum DepthQuality
+	{
+		Low,
+		Medium,
+		High
+	}
+	/// <summary>
+	/// The quality level of depth image. The lighting could be more smooth and accurate with high quality depth, but it would also be more costly in performance.
+	/// </summary>
+	[HideInInspector, Tooltip("The quality level of depth image. The lighting could be more smooth and accurate with high quality depth, but it would also be more costly in performance.")]
+	public DepthQuality depthQuality = DepthQuality.Medium;
+
+	/// <summary>
+	/// Smooth factor in dynamic lighting. Larger is smoother
+	/// </summary>
+	[HideInInspector, Tooltip("Smooth factor in dynamic lighting. Larger is smoother")]
+	public float dynamicLightingSmoothFactor = 8.0f;
+
+	/// <summary>
+	/// The maximum depth variation across the edges. Make it smaller to smooth the lighting on the edges.
+	/// </summary>
+	[HideInInspector, Tooltip("The maximum depth variation across the edges. Make it smaller to smooth the lighting on the edges.")]
+	public float dynamicLightingDepthVariationClampingValue = 0.001f;
+
+	public enum VirtualGreenScreenType
+	{
+		Off,
+		OuterBoundary,
+		PlayArea
+	}
+
+	/// <summary>
+	/// Set the current type of the virtual green screen
+	/// </summary>
+	[HideInInspector, Tooltip("Type of virutal green screen ")]
+	public VirtualGreenScreenType virtualGreenScreenType = VirtualGreenScreenType.Off;
+
+	/// <summary>
+	/// Top Y of virtual screen
+	/// </summary>
+	[HideInInspector, Tooltip("Top Y of virtual green screen")]
+	public float virtualGreenScreenTopY = 10.0f;
+
+	/// <summary>
+	/// Bottom Y of virtual screen
+	/// </summary>
+	[HideInInspector, Tooltip("Bottom Y of virtual green screen")]
+	public float virtualGreenScreenBottomY = -10.0f;
+
+	/// <summary>
+	/// When using a depth camera (e.g. ZED), whether to use the depth in virtual green screen culling.
+	/// </summary>
+	[HideInInspector, Tooltip("When using a depth camera (e.g. ZED), whether to use the depth in virtual green screen culling.")]
+	public bool virtualGreenScreenApplyDepthCulling = false;
+
+	/// <summary>
+	/// The tolerance value (in meter) when using the virtual green screen with a depth camera. Make it bigger if the foreground objects got culled incorrectly.
+	/// </summary>
+	[HideInInspector, Tooltip("The tolerance value (in meter) when using the virtual green screen with a depth camera. Make it bigger if the foreground objects got culled incorrectly.")]
+	public float virtualGreenScreenDepthTolerance = 0.2f;
+#endif
 
 	/// <summary>
 	/// The number of expected display frames per rendered frame.
@@ -471,7 +650,6 @@ public class OVRManager : MonoBehaviour
 
 	/// <summary>
 	/// Gets or sets the eye texture format.
-	/// This feature is only for UNITY_5_6_OR_NEWER On PC
 	/// </summary>
 	public static EyeTextureFormat eyeTextureFormat
 	{
@@ -485,6 +663,71 @@ public class OVRManager : MonoBehaviour
 			OVRPlugin.SetDesiredEyeTextureFormat((OVRPlugin.EyeTextureFormat)value);
 		}
 	}
+
+	/// <summary>
+	/// Gets if tiled-based multi-resolution technique is supported
+	/// This feature is only supported on QCOMM-based Android devices
+	/// </summary>
+	public static bool tiledMultiResSupported
+	{
+		get
+		{
+			return OVRPlugin.tiledMultiResSupported;
+		}
+	}
+
+	/// <summary>
+	/// Gets or sets the tiled-based multi-resolution level
+	/// This feature is only supported on QCOMM-based Android devices
+	/// </summary>
+	public static TiledMultiResLevel tiledMultiResLevel
+	{
+		get
+		{
+			if (!OVRPlugin.tiledMultiResSupported)
+			{
+				Debug.LogWarning("Tiled-based Multi-resolution feature is not supported");
+			}
+			return (TiledMultiResLevel)OVRPlugin.tiledMultiResLevel;
+		}
+		set
+		{
+			if (!OVRPlugin.tiledMultiResSupported)
+			{
+				Debug.LogWarning("Tiled-based Multi-resolution feature is not supported");
+			}
+			OVRPlugin.tiledMultiResLevel = (OVRPlugin.TiledMultiResLevel)value;
+		}
+	}
+
+	/// <summary>
+	/// Gets if the GPU Utility is supported
+	/// This feature is only supported on QCOMM-based Android devices
+	/// </summary>
+	public static bool gpuUtilSupported
+	{
+		get
+		{
+			return OVRPlugin.gpuUtilSupported;
+		}
+	}
+
+	/// <summary>
+	/// Gets the GPU Utilised Level (0.0 - 1.0)
+	/// This feature is only supported on QCOMM-based Android devices
+	/// </summary>
+	public static float gpuUtilLevel
+	{
+		get
+		{
+			if (!OVRPlugin.gpuUtilSupported)
+			{
+				Debug.LogWarning("GPU Util is not supported");
+			}
+			return OVRPlugin.gpuUtilLevel;
+		}
+	}
+
 
 	[Header("Tracking")]
 	[SerializeField]
@@ -588,45 +831,63 @@ public class OVRManager : MonoBehaviour
 		get { return OVRPlugin.nativeSDKVersion; }
 	}
 
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 	private static bool prevEnableMixedReality = false;
 	private static bool MixedRealityEnabledFromCmd()
 	{
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 		var args = System.Environment.GetCommandLineArgs();
 		for (int i = 0; i < args.Length; i++)
 		{
 			if (args[i].ToLower() == "-mixedreality")
 				return true;
 		}
-#endif
 		return false;
 	}
 
 	private static bool UseDirectCompositionFromCmd()
 	{
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 		var args = System.Environment.GetCommandLineArgs();
 		for (int i = 0; i < args.Length; i++)
 		{
 			if (args[i].ToLower() == "-directcomposition")
 				return true;
 		}
-#endif
 		return false;
 	}
 
 	private static bool UseExternalCompositionFromCmd()
 	{
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 		var args = System.Environment.GetCommandLineArgs();
 		for (int i = 0; i < args.Length; i++)
 		{
 			if (args[i].ToLower() == "-externalcomposition")
 				return true;
 		}
-#endif
 		return false;
 	}
+
+	private static bool CreateMixedRealityCaptureConfigurationFileFromCmd()
+	{
+		var args = System.Environment.GetCommandLineArgs();
+		for (int i = 0; i < args.Length; i++)
+		{
+			if (args[i].ToLower() == "-create_mrc_config")
+				return true;
+		}
+		return false;
+	}
+
+	private static bool LoadMixedRealityCaptureConfigurationFileFromCmd()
+	{
+		var args = System.Environment.GetCommandLineArgs();
+		for (int i = 0; i < args.Length; i++)
+		{
+			if (args[i].ToLower() == "-load_mrc_config")
+				return true;
+		}
+		return false;
+	}
+#endif
 
 #region Unity Messages
 
@@ -678,28 +939,57 @@ public class OVRManager : MonoBehaviour
 		chromatic = false;
 #endif
 
-#if !UNITY_EDITOR
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
 		enableMixedReality = false;		// we should never start the standalone game in MxR mode, unless the command-line parameter is provided
 #endif
 
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+		bool loadMrcConfig = LoadMixedRealityCaptureConfigurationFileFromCmd();
+		bool createMrcConfig = CreateMixedRealityCaptureConfigurationFileFromCmd();
+
+		if (loadMrcConfig || createMrcConfig)
+		{
+			OVRMixedRealityCaptureSettings mrcSettings = ScriptableObject.CreateInstance<OVRMixedRealityCaptureSettings>();
+			mrcSettings.ReadFrom(this);
+			if (loadMrcConfig)
+			{
+				mrcSettings.CombineWithConfigurationFile();
+				mrcSettings.ApplyTo(this);
+			}
+			if (createMrcConfig)
+			{
+				mrcSettings.WriteToConfigurationFile();
+			}
+			ScriptableObject.Destroy(mrcSettings);
+		}
+
 		if (MixedRealityEnabledFromCmd())
 		{
-			Debug.Log("OVR: Mixed Reality mode enabled");
 			enableMixedReality = true;
 		}
 
 		if (enableMixedReality)
 		{
+			Debug.Log("OVR: Mixed Reality mode enabled");
 			if (UseDirectCompositionFromCmd())
 			{
-				useDirectComposition = true;
+				compositionMethod = CompositionMethod.Direct;
 			}
 			if (UseExternalCompositionFromCmd())
 			{
-				useDirectComposition = false;
+				compositionMethod = CompositionMethod.External;
 			}
-			Debug.Log("OVR: Direct Composition " + (useDirectComposition ? "on" : "off"));
+			Debug.Log("OVR: CompositionMethod : " + compositionMethod);
 		}
+#endif
+
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+		if (enableAdaptiveResolution && !OVRManager.IsAdaptiveResSupportedByEngine())
+		{
+			enableAdaptiveResolution = false;
+			UnityEngine.Debug.LogError("Your current Unity Engine " + Application.unityVersion + " might have issues to support adaptive resolution, please disable it under OVRManager");
+		}
+#endif
 
 		Initialize();
 
@@ -708,12 +998,6 @@ public class OVRManager : MonoBehaviour
 
 		// Disable the occlusion mesh by default until open issues with the preview window are resolved.
 		OVRPlugin.occlusionMesh = false;
-
-#if UNITY_EDITOR
-		#pragma warning disable 0618
-		EditorApplication.playmodeStateChanged += OnEditorApplicationPlaymodeStateChanged;
-		#pragma warning restore
-#endif
 	}
 
 #if UNITY_EDITOR
@@ -736,6 +1020,7 @@ public class OVRManager : MonoBehaviour
 			boundary = new OVRBoundary();
 	}
 
+	private bool suppressDisableMixedRealityBecauseOfNoMainCameraWarning = false;
 	private void Update()
 	{
 #if UNITY_EDITOR
@@ -751,7 +1036,9 @@ public class OVRManager : MonoBehaviour
 			Application.Quit();
 
 		if (OVRPlugin.shouldRecenter)
+		{
 			OVRManager.display.RecenterPose();
+		}
 
 		if (trackingOriginType != _trackingOriginType)
 			trackingOriginType = _trackingOriginType;
@@ -867,12 +1154,44 @@ public class OVRManager : MonoBehaviour
 
 		_hadVrFocus = hasVrFocus;
 
+		// Dispatch VR Input events.
+
+		bool hasInputFocus = OVRPlugin.hasInputFocus;
+
+		if (_hadInputFocus && !hasInputFocus)
+		{
+			try
+			{
+				if (InputFocusLost != null)
+					InputFocusLost();
+			}
+			catch (Exception e)
+			{
+				Debug.LogError("Caught Exception: " + e);
+			}
+		}
+
+		if (!_hadInputFocus && hasInputFocus)
+		{
+			try
+			{
+				if (InputFocusAcquired != null)
+					InputFocusAcquired();
+			}
+			catch (Exception e)
+			{
+				Debug.LogError("Caught Exception: " + e);
+			}
+		}
+
+		_hadInputFocus = hasInputFocus;
 
 		// Changing effective rendering resolution dynamically according performance
-#if (UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN) && UNITY_5_4_OR_NEWER
+#if (UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
 
 		if (enableAdaptiveResolution)
 		{
+#if UNITY_2017_2_OR_NEWER
 			if (UnityEngine.XR.XRSettings.eyeTextureResolutionScale < maxRenderScale)
 			{
 				// Allocate renderScale to max to avoid re-allocation
@@ -888,6 +1207,23 @@ public class OVRManager : MonoBehaviour
 			float recommendedViewportScale = OVRPlugin.GetEyeRecommendedResolutionScale() / UnityEngine.XR.XRSettings.eyeTextureResolutionScale;
 			recommendedViewportScale = Mathf.Clamp(recommendedViewportScale, minViewportScale, 1.0f);
 			UnityEngine.XR.XRSettings.renderViewportScale = recommendedViewportScale;
+#else
+			if (UnityEngine.VR.VRSettings.renderScale < maxRenderScale)
+			{
+				// Allocate renderScale to max to avoid re-allocation
+				UnityEngine.VR.VRSettings.renderScale = maxRenderScale;
+			}
+			else
+			{
+				// Adjusting maxRenderScale in case app started with a larger renderScale value
+				maxRenderScale = Mathf.Max(maxRenderScale, UnityEngine.VR.VRSettings.renderScale);
+			}
+			minRenderScale = Mathf.Min(minRenderScale, maxRenderScale);
+			float minViewportScale = minRenderScale / UnityEngine.VR.VRSettings.renderScale;
+			float recommendedViewportScale = OVRPlugin.GetEyeRecommendedResolutionScale() / UnityEngine.VR.VRSettings.renderScale;
+			recommendedViewportScale = Mathf.Clamp(recommendedViewportScale, minViewportScale, 1.0f);
+			UnityEngine.VR.VRSettings.renderViewportScale = recommendedViewportScale;
+#endif
 		}
 #endif
 
@@ -968,18 +1304,17 @@ public class OVRManager : MonoBehaviour
 		display.Update();
 		OVRInput.Update();
 
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 		if (enableMixedReality || prevEnableMixedReality)
 		{
 			Camera mainCamera = FindMainCamera();
 			if (Camera.main != null)
 			{
+				suppressDisableMixedRealityBecauseOfNoMainCameraWarning = false;
+
 				if (enableMixedReality)
 				{
-					OVRMixedReality.directCompositionChromaToleranceA = greenScreenColorToleranceA;
-					OVRMixedReality.directCompositionChromaToleranceB = greenScreenColorToleranceB;
-					OVRMixedReality.directCompositionChromaShadows = greenScreenColorShadows;
-					OVRMixedReality.directCompositionChromaAlphaCutoff = greenScreenColorAlphaCutoff;
-					OVRMixedReality.Update(this.gameObject, mainCamera, useDirectComposition);
+					OVRMixedReality.Update(this.gameObject, mainCamera, compositionMethod, useDynamicLighting, capturingCameraDevice, depthQuality);
 				}
 
 				if (prevEnableMixedReality && !enableMixedReality)
@@ -991,12 +1326,17 @@ public class OVRManager : MonoBehaviour
 			}
 			else
 			{
-				Debug.LogWarning("Main Camera is not set, Mixed Reality disabled");
+				if (!suppressDisableMixedRealityBecauseOfNoMainCameraWarning)
+				{
+					Debug.LogWarning("Main Camera is not set, Mixed Reality disabled");
+					suppressDisableMixedRealityBecauseOfNoMainCameraWarning = true;
+				}
 			}
 		}
+#endif
 	}
 
-	public bool multipleMainCameraWarningPresented = false;
+	private bool multipleMainCameraWarningPresented = false;
 	private Camera FindMainCamera()
 	{
 		GameObject[] objects = GameObject.FindGameObjectsWithTag("MainCamera");
@@ -1006,12 +1346,16 @@ public class OVRManager : MonoBehaviour
 			Camera camera = obj.GetComponent<Camera>();
 			if (camera != null && camera.enabled)
 			{
-				cameras.Add(camera);
+				OVRCameraRig cameraRig = camera.GetComponentInParent<OVRCameraRig>();
+				if (cameraRig != null && cameraRig.trackingSpace != null)
+				{
+					cameras.Add(camera);
+				}
 			}
 		}
 		if (cameras.Count == 0)
 		{
-			return null;
+			return Camera.main;		// pick one of the cameras which tagged as "MainCamera"
 		}
 		else if (cameras.Count == 1)
 		{
@@ -1030,21 +1374,12 @@ public class OVRManager : MonoBehaviour
 		}
 	}
 
-#if UNITY_EDITOR
-	private void OnEditorApplicationPlaymodeStateChanged()
+	private void OnDisable()
 	{
-		if (!EditorApplication.isPlaying)
-		{
-			if (enableMixedReality)
-			{
-				OVRMixedReality.Cleanup();
-			}
-			#pragma warning disable 0618
-			EditorApplication.playmodeStateChanged -= OnEditorApplicationPlaymodeStateChanged;
-			#pragma warning restore
-		}
-	}
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+		OVRMixedReality.Cleanup();
 #endif
+	}
 
 	private void LateUpdate()
 	{
@@ -1073,13 +1408,5 @@ public class OVRManager : MonoBehaviour
 			return;
 
 		OVRPlugin.ShowUI(OVRPlugin.PlatformUI.ConfirmQuit);
-	}
-
-	public static void PlatformUIGlobalMenu()
-	{
-		if (!isHmdPresent)
-			return;
-
-		OVRPlugin.ShowUI(OVRPlugin.PlatformUI.GlobalMenu);
 	}
 }

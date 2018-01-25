@@ -1,6 +1,4 @@
-﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-Shader "Unlit/OVRMRCameraFrame"
+﻿Shader "Oculus/OVRMRCameraFrame"
 {
 	Properties
 	{
@@ -8,8 +6,8 @@ Shader "Unlit/OVRMRCameraFrame"
 		_MainTex("Main Texture", 2D) = "white" {}
 		_Visible("Visible", Range(0.0,1.0)) = 1.0
 		_ChromaAlphaCutoff("ChromaAlphaCutoff", Range(0.0,1.0)) = 0.01
-		_ChromaToleranceA("ChromaToleranceA", Range(0.0,50.0)) = 5.0
-		_ChromaToleranceB("ChromaToleranceB", Range(0.0,50.0)) = 5.0
+		_ChromaToleranceA("ChromaToleranceA", Range(0.0,50.0)) = 20.0
+		_ChromaToleranceB("ChromaToleranceB", Range(0.0,50.0)) = 15.0
 		_ChromaShadows("ChromaShadows", Range(0.0,1.0)) = 0.02
 	}
 	SubShader
@@ -28,6 +26,7 @@ Shader "Unlit/OVRMRCameraFrame"
 			#pragma fragment frag
 
 			#include "UnityCG.cginc"
+			#include "OVRMRChromaKey.cginc"
 
 			struct appdata
 			{
@@ -41,64 +40,58 @@ Shader "Unlit/OVRMRCameraFrame"
 				float2 texcoord : TEXCOORD0;
 			};
 
-			fixed4 _Color;
 			sampler2D _MainTex;
 			float4 _MainTex_ST;
+			sampler2D _MaskTex;
+
+			float4 _TextureDimension;		// (w, h, 1/w, 1/h)
+
+			fixed4 _Color;
 			fixed  _Visible;
-			float _ChromaAlphaCutoff;
-			float _ChromaToleranceA;
-			float _ChromaToleranceB;
-			float _ChromaShadows;
+			float4 _FlipParams;		// (flip_h, flip_v, 0, 0)
 
 			v2f vert (appdata v)
 			{
 				v2f o;
-#if UNITY_VERSION >= 540
 				o.vertex = UnityObjectToClipPos(v.vertex);
-#else
-				o.vertex = UnityObjectToClipPos(v.vertex);
-#endif
 				o.vertex *= _Visible;
 				o.texcoord = TRANSFORM_TEX(float2(v.texcoord.x, 1.0-v.texcoord.y), _MainTex);
 				return o;
 			}
 
-			float4 doChroma(float4 oldColor)
+			fixed GetMask(float2 uv)
 			{
-				float a = _ChromaToleranceA;
-				float b = _ChromaToleranceB;
-
-				float alpha = (a * (oldColor.r + oldColor.b)) - (b * oldColor.g);
-
-				if ((oldColor.r + oldColor.g + oldColor.b) / 3 < _ChromaShadows)
-				{
-					alpha = 1;
-				}
-
-				alpha = saturate(alpha);
-
-				return float4(oldColor.r, oldColor.g, oldColor.b, alpha);
+				return tex2D(_MaskTex, uv).r;
 			}
 
-      float4 doBleedTest(float4 oldColor)
+			fixed4 GetCameraColor(float2 colorUV)
 			{
-				float greenScalar = (oldColor.g - oldColor.r) / 25.0;
-				greenScalar = clamp(greenScalar, 0.0, 1.0);
-				float greenVal = min(oldColor.g, oldColor.b);
-				return float4(oldColor.r, lerp(oldColor.g, greenVal, greenScalar), oldColor.b, oldColor.a);
+				fixed4 c = tex2D(_MainTex, colorUV) * _Color;
+				return c;
 			}
 
 			fixed4 frag (v2f i) : SV_Target
 			{
-				float4 texel = tex2D(_MainTex, i.texcoord);
-				float4 col = _Color * texel;
-				float4 newColor = doChroma(col);
-				if (newColor.a < _ChromaAlphaCutoff)
+				float2 colorUV = i.texcoord;
+				if (_FlipParams.x > 0.0)
+				{
+					colorUV.x = 1.0 - colorUV.x;
+				}
+				if (_FlipParams.y > 0.0)
+				{
+					colorUV.y = 1.0 - colorUV.y;
+				}
+				float mask = GetMask(float2(colorUV.x, 1.0 - colorUV.y));
+				if (mask == 0.0)
 				{
 					discard;
 				}
-				newColor = doBleedTest(newColor);
-				return newColor;
+				float4 col = GetColorAfterChromaKey(colorUV, _TextureDimension.zw, 1.0);
+				if (col.a < 0.0)
+				{
+					discard;
+				}
+				return col;
 			}
 			ENDCG
 		}
