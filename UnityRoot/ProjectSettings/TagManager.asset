@@ -9,6 +9,13 @@ TagManager:
   - FxTemporaire
   - Floor
   - ExcludeTeleport
+  - Cubes
+  - Spheres
+  - Saucers
+  - OtherSaucers
+  - Torso
+  - Arm
+  - Leg
   layers:
   - Default
   - TransparentFX
