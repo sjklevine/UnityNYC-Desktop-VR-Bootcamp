@@ -4,15 +4,12 @@
 
     public class Remote_Beam_Controller : MonoBehaviour
     {
-        public GameObject remoteBeam;
-        private Remote_Beam remoteBeamScript;
+        public Remote_Beam remoteBeamScript;
 
         private void Start()
         {
-            remoteBeamScript = remoteBeam.GetComponent<Remote_Beam>();
-
-            GetComponent<VRTK_ControllerEvents>().TouchpadAxisChanged += new ControllerInteractionEventHandler(DoTouchpadAxisChanged);
-            GetComponent<VRTK_ControllerEvents>().TouchpadTouchEnd += new ControllerInteractionEventHandler(DoTouchpadTouchEnd);
+            GetComponent<VRTK_ControllerEvents>().TouchpadAxisChanged += DoTouchpadAxisChanged;
+            GetComponent<VRTK_ControllerEvents>().TouchpadTouchEnd += DoTouchpadTouchEnd;
         }
 
         private void DoTouchpadAxisChanged(object sender, ControllerInteractionEventArgs e)

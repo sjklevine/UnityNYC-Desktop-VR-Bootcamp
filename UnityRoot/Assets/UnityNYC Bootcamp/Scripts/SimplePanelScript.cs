@@ -13,6 +13,7 @@ public class SimplePanelScript : MonoBehaviour {
 	protected bool timedAutoDeactivate = false;
 	protected float activatedTime = 0.25f;
 	protected float timer;
+	protected bool isActivated;
 
 	protected virtual void Update() {
 		if (timedAutoDeactivate && timer > 0) {
@@ -28,10 +29,12 @@ public class SimplePanelScript : MonoBehaviour {
 		this.GetComponent<Image> ().material = activateMaterial;
 		if (timedAutoDeactivate) { timer = activatedTime; }
 		if (onActivate != null) { onActivate.Invoke (); }
+		isActivated = true;
 	}
 
 	public void Deactivate()
 	{
 		this.GetComponent<Image>().material = defaultMaterial;
+		isActivated = false;
 	}
 }
