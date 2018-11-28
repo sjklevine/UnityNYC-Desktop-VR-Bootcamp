@@ -34,7 +34,8 @@
             SDK_NOT_FOUND,
             SDK_MANAGER_ERRORS,
             SCRIPTING_DEFINE_SYMBOLS_ADDED,
-            SCRIPTING_DEFINE_SYMBOLS_REMOVED
+            SCRIPTING_DEFINE_SYMBOLS_REMOVED,
+            SCRIPTING_DEFINE_SYMBOLS_NOT_FOUND
         }
 
         public static VRTK_Logger instance = null;
@@ -124,22 +125,22 @@
             Log(LogLevels.Warn, message);
         }
 
-        public static void Error(string message)
+        public static void Error(string message, bool forcePause = false)
         {
-            Log(LogLevels.Error, message);
+            Log(LogLevels.Error, message, forcePause);
         }
 
-        public static void Fatal(string message)
+        public static void Fatal(string message, bool forcePause = false)
         {
-            Log(LogLevels.Fatal, message);
+            Log(LogLevels.Fatal, message, forcePause);
         }
 
-        public static void Fatal(Exception exception)
+        public static void Fatal(Exception exception, bool forcePause = false)
         {
-            Log(LogLevels.Fatal, exception.Message);
+            Log(LogLevels.Fatal, exception.Message, forcePause);
         }
 
-        public static void Log(LogLevels level, string message)
+        public static void Log(LogLevels level, string message, bool forcePause = false)
         {
 #if VRTK_NO_LOGGING
             return;
@@ -163,6 +164,11 @@
                     break;
                 case LogLevels.Error:
                 case LogLevels.Fatal:
+                    if (forcePause)
+                    {
+                        UnityEngine.Debug.Break();
+                    }
+
                     if (instance.throwExceptions)
                     {
                         throw new Exception(message);

@@ -88,22 +88,32 @@ namespace VRTK
         /// <returns>The ControllerType based on the SDK and headset being used.</returns>
         public override ControllerType GetCurrentControllerType(VRTK_ControllerReference controllerReference = null)
         {
-            switch (OVRInput.GetActiveController())
+            OVRInput.Controller connectedControllers = OVRInput.GetConnectedControllers();
+            if ((connectedControllers & (OVRInput.Controller.LTouch | OVRInput.Controller.RTouch | OVRInput.Controller.Touch)) != 0)
             {
-                case OVRInput.Controller.LTouch:
-                case OVRInput.Controller.RTouch:
-                case OVRInput.Controller.Touch:
-                    return ControllerType.Oculus_OculusTouch;
-                case OVRInput.Controller.Remote:
-                    return ControllerType.Oculus_OculusRemote;
-                case OVRInput.Controller.Gamepad:
-                    return ControllerType.Oculus_OculusGamepad;
-                case OVRInput.Controller.Touchpad:
-                    return ControllerType.Oculus_GearVRHMD;
-                case OVRInput.Controller.LTrackedRemote:
-                case OVRInput.Controller.RTrackedRemote:
-                    return ControllerType.Oculus_GearVRController;
+                return ControllerType.Oculus_OculusTouch;
             }
+
+            if ((connectedControllers & OVRInput.Controller.Remote) == OVRInput.Controller.Remote)
+            {
+                return ControllerType.Oculus_OculusRemote;
+            }
+
+            if ((connectedControllers & OVRInput.Controller.Gamepad) == OVRInput.Controller.Gamepad)
+            {
+                return ControllerType.Oculus_OculusGamepad;
+            }
+
+            if ((connectedControllers & OVRInput.Controller.Touchpad) == OVRInput.Controller.Touchpad)
+            {
+                return ControllerType.Oculus_GearVRHMD;
+            }
+
+            if ((connectedControllers & (OVRInput.Controller.LTrackedRemote | OVRInput.Controller.RTrackedRemote)) != 0)
+            {
+                return ControllerType.Oculus_GearVRController;
+            }
+
             return ControllerType.Undefined;
         }
 
@@ -143,7 +153,7 @@ namespace VRTK
                 switch (element)
                 {
                     case ControllerElements.AttachPoint:
-                        return null;
+                        return "";
                     case ControllerElements.Trigger:
                         return path + "trigger" + suffix;
                     case ControllerElements.GripLeft:
@@ -164,7 +174,7 @@ namespace VRTK
                         return parent;
                 }
             }
-            return null;
+            return "";
         }
 
         /// <summary>
@@ -234,7 +244,7 @@ namespace VRTK
             GameObject controller = GetSDKManagerControllerLeftHand(actual);
             if (controller == null && actual)
             {
-                controller = VRTK_SharedMethods.FindEvenInactiveGameObject<OVRCameraRig>("TrackingSpace/LeftHandAnchor");
+                controller = VRTK_SharedMethods.FindEvenInactiveGameObject<OVRCameraRig>("TrackingSpace/LeftHandAnchor", true);
             }
             return controller;
         }
@@ -249,7 +259,7 @@ namespace VRTK
             GameObject controller = GetSDKManagerControllerRightHand(actual);
             if (controller == null && actual)
             {
-                controller = VRTK_SharedMethods.FindEvenInactiveGameObject<OVRCameraRig>("TrackingSpace/RightHandAnchor");
+                controller = VRTK_SharedMethods.FindEvenInactiveGameObject<OVRCameraRig>("TrackingSpace/RightHandAnchor", true);
             }
             return controller;
         }
@@ -808,10 +818,11 @@ namespace VRTK
 
         protected virtual OVRInput.Controller GetControllerMask(uint index)
         {
-            OVRInput.Controller activeControllerType = OVRInput.GetActiveController();
+            OVRInput.Controller activeControllerType = OVRInput.GetConnectedControllers();
 
             switch (activeControllerType)
             {
+                case OVRInput.Controller.Gamepad | OVRInput.Controller.RTouch | OVRInput.Controller.LTouch:
                 case OVRInput.Controller.Touch:
                     return (index == 0 ? OVRInput.Controller.LTouch : (index == 1 ? OVRInput.Controller.RTouch : OVRInput.Controller.None));
                 case OVRInput.Controller.LTouch:
