@@ -7,6 +7,7 @@ UnityRoot/[Bb]uilds/
 UnityRoot/Assets/AssetStoreTools*
 
 # Hide Rider stuff
+UnityRoot/.idea/
 UnityRoot/Assets/Plugins/Editor/JetBrains.meta
 UnityRoot/Assets/Plugins/Editor/JetBrains/
 
